@@ -43,6 +43,18 @@ export interface SitemapSourceDescriptor {
   locale: string;
 }
 
+/** The `nuxt-site-config` shape this module derives. Never carries `url` — that's left for
+ *  `nuxt-site-config` to resolve per request from the incoming host. */
+export interface DerivedSiteConfig {
+  env: string;
+  trailingSlash: boolean;
+  multiTenancy: Array<{ hosts: string[]; config: { name: string; defaultLocale?: string } }>;
+  /** Only set when the project named the site; otherwise each market's own name is used. */
+  name?: string;
+  /** Left unset on 'auto' so the environment decides. */
+  indexable?: boolean;
+}
+
 const DEV_DOMAIN = 'local.laioutr.tech';
 
 /** Mirrors frontend-core's devHost derivation so a market resolves in local development. */
@@ -89,7 +101,7 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
     sources.map((source) => [source.name, { chunks: true, chunkSize: SITEMAP_CHUNK_SIZE, includeAppSources: false }])
   );
 
-  const site: Record<string, unknown> = {
+  const site: DerivedSiteConfig = {
     env: resolveEnv(options, env),
     trailingSlash: laioutrrc.config?.trailingSlash ?? false,
     multiTenancy: markets.flatMap((market) =>

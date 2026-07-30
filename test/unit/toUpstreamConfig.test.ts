@@ -72,7 +72,8 @@ describe('toUpstreamConfig — site', () => {
 
   it('derives the dev host from the platform convention, stripping a www. prefix', () => {
     const entry = build().site.multiTenancy.find((candidate) => candidate.hosts.includes('shop.ch'));
-    expect(entry.hosts).toContain('shop-ch.local.laioutr.tech');
+    expect(entry).toBeDefined();
+    expect(entry!.hosts).toContain('shop-ch.local.laioutr.tech');
 
     const rcWithWww = {
       ...laioutrrc,
@@ -91,7 +92,8 @@ describe('toUpstreamConfig — site', () => {
       options: resolveOptions({}),
       env: {},
     }).site.multiTenancy.find((candidate) => candidate.hosts.includes('www.shop.ch'));
-    expect(wwwEntry.hosts).toContain('shop-ch.local.laioutr.tech');
+    expect(wwwEntry).toBeDefined();
+    expect(wwwEntry!.hosts).toContain('shop-ch.local.laioutr.tech');
   });
 
   it('resolves env from options first', () => {
