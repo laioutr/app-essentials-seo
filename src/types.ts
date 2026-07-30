@@ -16,7 +16,7 @@ const RobotsGroupSchema = z.object({
   disallow: z.array(z.string()).default([]),
 });
 
-const SitemapOptionsSchema = z.object({
+export const SitemapOptionsSchema = z.object({
   enabled: z.boolean().default(true),
   excludePageTypes: z.array(z.string()).default([]),
   pageTypes: z.array(PageTypeSeoSchema).default([]),
@@ -27,7 +27,7 @@ const SitemapOptionsSchema = z.object({
   rebuildBatchSize: z.number().int().min(1).default(10_000),
 });
 
-const RobotsOptionsSchema = z.object({
+export const RobotsOptionsSchema = z.object({
   enabled: z.boolean().default(true),
   blockAiBots: z.boolean().default(false),
   blockNonSeoBots: z.boolean().default(false),

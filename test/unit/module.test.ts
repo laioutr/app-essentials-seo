@@ -42,4 +42,36 @@ describe('applyUpstreamConfig', () => {
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
+
+  it('warns when nuxtOptions.site.url is set and more than one host is configured', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const nuxtOptions: any = { site: { url: 'https://a' } };
+    applyUpstreamConfig(nuxtOptions, { site: { multiTenancy: [{ hosts: ['a'] }, { hosts: ['b'] }] }, sitemap: {}, robots: {} }, {});
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('site.url'));
+    warn.mockRestore();
+  });
+
+  it('does not warn about nuxtOptions.site.url when only one host is configured', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const nuxtOptions: any = { site: { url: 'https://a' } };
+    applyUpstreamConfig(nuxtOptions, { site: { multiTenancy: [{ hosts: ['a'] }] }, sitemap: {}, robots: {} }, {});
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('does not let a curated-only sitemap key reach the upstream sitemap config', () => {
+    const nuxtOptions: any = {};
+    applyUpstreamConfig(
+      nuxtOptions,
+      { site: {}, sitemap: { defaults: { priority: 0.5 } }, robots: {} },
+      { sitemap: { excludePageTypes: ['core/404'] } }
+    );
+    expect(nuxtOptions.sitemap.excludePageTypes).toBeUndefined();
+  });
+
+  it('derives blockNonSeoBots from the curated schema rather than the raw escape hatch', () => {
+    const nuxtOptions: any = {};
+    applyUpstreamConfig(nuxtOptions, { site: {}, sitemap: {}, robots: { blockNonSeoBots: false } }, { robots: { blockNonSeoBots: true } });
+    expect(nuxtOptions.robots.blockNonSeoBots).toBe(false);
+  });
 });
