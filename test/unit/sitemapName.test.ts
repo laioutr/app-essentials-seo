@@ -26,6 +26,17 @@ describe('buildSitemapName', () => {
   it('handles a locale with a region subtag', () => {
     expect(buildSitemapName('blog/post-single', 'de-CH')).toBe('blog-post-single-de-CH');
   });
+
+  it('re-registering the same pair under the name it already produced is a no-op', () => {
+    const name = buildSitemapName('ecommerce/product-detail-page', 'de');
+    expect(() => buildSitemapName('ecommerce/product-detail-page', 'de')).not.toThrow();
+    expect(parseSitemapName(name)).toEqual({ token: 'ecommerce/product-detail-page', locale: 'de' });
+  });
+
+  it('throws when two different pairs collide on the same name', () => {
+    buildSitemapName('ns/a-b', 'c');
+    expect(() => buildSitemapName('ns/a', 'b-c')).toThrow('ns-a-b-c');
+  });
 });
 
 describe('parseSitemapName', () => {
