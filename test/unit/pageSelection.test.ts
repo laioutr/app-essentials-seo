@@ -26,6 +26,11 @@ describe('defaultVariant', () => {
     expect(defaultVariant(page)?.seo.robots).toBe('all');
   });
 
+  it('treats an explicit null conditions the same as a missing one', () => {
+    const page = { variants: { a: variant({ robots: 'all' }, { rules: [] }), b: variant({ robots: 'noindex' }, null) } };
+    expect(defaultVariant(page)?.seo.robots).toBe('noindex');
+  });
+
   it('returns undefined when there are no variants', () => {
     expect(defaultVariant({ variants: {} })).toBeUndefined();
   });
@@ -46,6 +51,14 @@ describe('isNoindexRobots', () => {
   it('does not match a substring of another token', () => {
     expect(isNoindexRobots('max-snippet:-1')).toBe(false);
   });
+
+  it('matches tokens separated by whitespace only', () => {
+    expect(isNoindexRobots('noindex nofollow')).toBe(true);
+  });
+
+  it('matches tokens separated by a mix of commas and whitespace', () => {
+    expect(isNoindexRobots('noindex,  nofollow')).toBe(true);
+  });
 });
 
 describe('isPageIncluded', () => {
@@ -63,6 +76,10 @@ describe('isPageIncluded', () => {
     expect(isPageIncluded({ ...base, marketIds: ['m1'] }, { marketId: 'm1', excludePageTypes: [] })).toBe(true);
   });
 
+  it('includes a page with an empty marketIds list for any market, same as no scoping', () => {
+    expect(isPageIncluded({ ...base, marketIds: [] }, { marketId: 'm1', excludePageTypes: [] })).toBe(true);
+  });
+
   it('always excludes the catch-all 404 type', () => {
     expect(isPageIncluded({ ...base, type: 'core/404' }, { marketId: 'm1', excludePageTypes: [] })).toBe(false);
   });
@@ -74,5 +91,9 @@ describe('isPageIncluded', () => {
   it('excludes a page whose default variant is noindex', () => {
     const page = { ...base, variants: { a: variant({ robots: 'noindex, follow' }) } };
     expect(isPageIncluded(page, { marketId: 'm1', excludePageTypes: [] })).toBe(false);
+  });
+
+  it('includes a page with no variants, since there is no robots directive to exclude it', () => {
+    expect(isPageIncluded({ ...base, variants: {} }, { marketId: 'm1', excludePageTypes: [] })).toBe(true);
   });
 });
