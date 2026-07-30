@@ -123,4 +123,23 @@ describe('runRebuildPass', () => {
     expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('startCursor'));
     errorSpy.mockRestore();
   });
+
+  it('returns a snapshot instead of rejecting when the stream rejects with null', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
+    const listPagesFrom = () => ({
+      toArray: async () => {
+        // A dependency's async chain can reject with anything, not just an Error — this is the case
+        // that reading `.message` off an un-narrowed cast gets wrong.
+        throw null;
+      },
+      endCursor: undefined,
+      [Symbol.asyncIterator]: async function* () {},
+    });
+    const next = await runRebuildPass({ ...base, previous, listPagesFrom: listPagesFrom as never });
+    expect(next.resumeFrom).toBe('cursor-1');
+    expect(next.complete).toBe(false);
+    expect(next.urls.map((u) => u.loc)).toEqual(['/p/a']);
+    errorSpy.mockRestore();
+  });
 });
