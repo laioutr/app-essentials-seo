@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { composePath, fillParams, hasUnfilledParams, unlocalize } from '../../src/runtime/shared/path';
+import { composePath, fillParams, hasUnfilledParams, missingParams, unlocalize } from '../../src/runtime/shared/path';
 
 describe('fillParams', () => {
   it('substitutes a simple param', () => {
@@ -16,6 +16,24 @@ describe('fillParams', () => {
 
   it('substitutes empty string for a missing param', () => {
     expect(fillParams('/products/:slug', {})).toBe('/products/');
+  });
+});
+
+describe('missingParams', () => {
+  it('reports a plain param with no value', () => {
+    expect(missingParams('/products/:slug', {})).toEqual(['slug']);
+  });
+
+  it('does not report a finite-set param with no value', () => {
+    expect(missingParams('/:param0(foo|bar)', {})).toEqual([]);
+  });
+
+  it('reports an empty-string value', () => {
+    expect(missingParams('/products/:slug', { slug: '' })).toEqual(['slug']);
+  });
+
+  it('does not report a supplied value', () => {
+    expect(missingParams('/products/:slug', { slug: 'shoe' })).toEqual([]);
   });
 });
 

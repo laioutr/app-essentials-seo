@@ -38,6 +38,18 @@ describe('mapPageIndexEntries', () => {
     expect(map([entry({ slug: '' })])).toHaveLength(0);
   });
 
+  it('keeps an entry omitting a finite-set-constrained param, filling the constraint default', () => {
+    const urls = mapPageIndexEntries({
+      entries: [entry({})],
+      pagePath: '/produkte/:category(neu|sale)',
+      domain,
+      trailingSlash: false,
+      includeImages: true,
+      seo: {},
+    });
+    expect(urls[0]?.loc).toBe('/fr/produkte/neu');
+  });
+
   it('carries lastModified through to lastmod', () => {
     expect(map([entry({ slug: 'x' }, { lastModified: '2026-03-01T00:00:00Z' })])[0].lastmod).toBe('2026-03-01T00:00:00Z');
   });

@@ -1,4 +1,4 @@
-import { composePath, fillParams, hasUnfilledParams, unlocalize } from '../../shared/path';
+import { composePath, fillParams, hasUnfilledParams, missingParams, unlocalize } from '../../shared/path';
 import type { SitemapUrl } from './alternates';
 import type { PageTypeSeo } from './configuredPageUrls';
 import type { RenderMarketDomain } from '@laioutr-core/core-types/rc';
@@ -25,15 +25,13 @@ export const mapPageIndexEntries = (input: {
   const path = unlocalize(pagePath, domain.language.localeChain);
   if (!path) return [];
 
-  const paramNames = [...path.matchAll(/:(\w+)/g)].map((match) => match[1]);
-
   const urls: SitemapUrl[] = [];
   for (const entry of entries) {
     if (entry.meta.noindex) continue;
 
-    // A param the template names but the entry leaves missing or empty would otherwise fill in as
-    // an empty string, silently truncating the URL instead of being caught here.
-    if (paramNames.some((name) => entry.params[name] === undefined || entry.params[name] === '')) continue;
+    // A param with no value and no constraint default would otherwise fill to an empty string,
+    // producing a truncated URL.
+    if (missingParams(path, entry.params).length) continue;
 
     const filled = fillParams(path, entry.params);
     // A missing param would otherwise emit a collapsed URL like /products//.

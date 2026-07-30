@@ -10,7 +10,11 @@ export interface SitemapSourceResolveContext {
   locale: string;
   market: RenderMarket;
   domain: RenderMarketDomain;
-  /** Raw entries, index-aligned with `urls` before any handler mutates it. */
+  /**
+   * Raw entries enumerated for this source, provided as context for filtering decisions. Not
+   * positionally aligned with `urls` — entries skipped as noindex, incomplete or unfillable never
+   * reach `urls`, so it is a subset.
+   */
   entries: readonly (PageIndexEntry | Record<string, unknown>)[];
   /** Mutated in place. Fires once per rebuild pass, not once per URL. */
   urls: SitemapUrl[];
