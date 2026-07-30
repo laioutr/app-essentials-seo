@@ -1,19 +1,14 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import type { RuntimeConfigModulePrivate, RuntimeConfigModulePublic } from './module';
-
-declare module 'vue' {
-  interface GlobalComponents {}
-  interface ComponentCustomProperties {
-    // Add your module's custom properties here
-  }
-}
+import type { ResolvedOptions } from './types';
 
 declare module '@nuxt/schema' {
   interface PublicRuntimeConfig {
-    ['my-laioutr-app']: RuntimeConfigModulePublic;
+    ['@laioutr/app-essentials-seo']: {
+      sitemap: ResolvedOptions['sitemap'];
+    };
   }
   interface RuntimeConfig {
-    ['my-laioutr-app']: RuntimeConfigModulePrivate;
+    ['@laioutr/app-essentials-seo']: ResolvedOptions;
   }
 }
 

@@ -1,8 +1,8 @@
 {
-  "name": "my-laioutr-app",
+  "name": "@laioutr/app-essentials-seo",
   "version": "1.0.0",
-  "description": "My new Laioutr App",
-  "repository": "your-org/my-laioutr-app",
+  "description": "SEO essentials for Laioutr frontends — sitemap.xml and robots.txt",
+  "repository": "laioutr/app-essentials-seo",
   "license": "MIT",
   "type": "module",
   "exports": {
@@ -38,11 +38,14 @@
   ],
   "dependencies": {
     "@nuxt/kit": "3.16.2",
+    "@nuxtjs/robots": "^5.5.6",
+    "@nuxtjs/sitemap": "^7.6.0",
     "zod": "3.25.61"
   },
   "devDependencies": {
     "@laioutr-app/ui": "^2.8.3",
     "@laioutr-core/devtools": "^0.38.1",
+    "@laioutr-core/orchestr": "^0.38.1",
     "@laioutr/eslint-config": "^1.8.8",
     "@laioutr/prettier-config": "^1.1.0",
     "@nuxt/devtools": "^2.6.3",
@@ -64,7 +67,8 @@
   "peerDependencies": {
     "@laioutr-core/canonical-types": ">=0.26.3",
     "@laioutr-core/core-types": ">=0.38.1",
-    "@laioutr-core/frontend-core": ">=0.38.1"
+    "@laioutr-core/frontend-core": ">=0.38.1",
+    "@laioutr-core/orchestr": ">=0.38.1"
   },
   "engines": {
     "node": ">=22.12.0",
