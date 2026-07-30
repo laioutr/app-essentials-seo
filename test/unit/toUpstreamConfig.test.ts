@@ -63,11 +63,20 @@ describe('toUpstreamConfig — site', () => {
     expect(build().site.trailingSlash).toBe(false);
   });
 
-  it('builds one multiTenancy entry per domain, carrying host and devHost', () => {
-    const hosts = build().site.multiTenancy.map((entry) => entry.hosts);
-    expect(hosts).toHaveLength(3);
+  it('builds one multiTenancy entry per unique host, not per domain, preferring the market default domain', () => {
+    const multiTenancy = build().site.multiTenancy;
+    expect(multiTenancy).toHaveLength(2);
+
+    const hosts = multiTenancy.map((entry) => entry.hosts);
     expect(hosts.flat()).toContain('shop.ch');
     expect(hosts.flat()).toContain('shop.de');
+
+    // shop.ch carries two domains (root de, /fr); the root one is mkt_ch's default domain, so
+    // that host's entry must resolve to 'de', not 'fr' — the second domain would otherwise be
+    // unreachable, since nuxt-site-config matches multiTenancy by host alone.
+    const chEntry = multiTenancy.find((entry) => entry.hosts.includes('shop.ch'));
+    expect(chEntry).toBeDefined();
+    expect(chEntry!.config.defaultLocale).toBe('de');
   });
 
   it('derives the dev host from the platform convention, stripping a www. prefix', () => {
@@ -104,6 +113,15 @@ describe('toUpstreamConfig — site', () => {
     expect(build({}, { NUXT_SITE_ENV: 'uat', VERCEL_ENV: 'production' }).site.env).toBe('uat');
     expect(build({}, { VERCEL_ENV: 'preview' }).site.env).toBe('preview');
     expect(build({}, {}).site.env).toBe('production');
+  });
+
+  it('treats a blank NUXT_SITE_ENV as unset and falls through to VERCEL_ENV', () => {
+    expect(build({}, { NUXT_SITE_ENV: '', VERCEL_ENV: 'preview' }).site.env).toBe('preview');
+  });
+
+  it('consults NUXT_PUBLIC_SITE_ENV between NUXT_SITE_ENV and VERCEL_ENV', () => {
+    expect(build({}, { NUXT_PUBLIC_SITE_ENV: 'uat' }).site.env).toBe('uat');
+    expect(build({}, { NUXT_PUBLIC_SITE_ENV: 'uat', VERCEL_ENV: 'production' }).site.env).toBe('uat');
   });
 
   it('leaves indexable unset on auto so env decides', () => {

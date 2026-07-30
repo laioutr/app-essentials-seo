@@ -67,8 +67,13 @@ const toDevHost = (host: string): string => {
   return `${sanitized}.${DEV_DOMAIN}`;
 };
 
+/** Treats an empty or whitespace-only value as unset, so a variable declared but left blank
+ *  (e.g. `NUXT_SITE_ENV=` in a Docker or CI config) doesn't short-circuit the fallback chain
+ *  before a real value is reached. */
+const nonBlank = (value: string | undefined): string | undefined => (value !== undefined && value.trim() !== '' ? value : undefined);
+
 const resolveEnv = (options: ResolvedOptions, env: NodeJS.ProcessEnv): string =>
-  options.environment ?? env.NUXT_SITE_ENV ?? env.NUXT_PUBLIC_SITE_ENV ?? env.VERCEL_ENV ?? 'production';
+  options.environment ?? nonBlank(env.NUXT_SITE_ENV) ?? nonBlank(env.NUXT_PUBLIC_SITE_ENV) ?? nonBlank(env.VERCEL_ENV) ?? 'production';
 
 export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: ResolvedOptions; env: NodeJS.ProcessEnv }) => {
   const { laioutrrc, options, env } = input;
@@ -101,18 +106,39 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
     sources.map((source) => [source.name, { chunks: true, chunkSize: SITEMAP_CHUNK_SIZE, includeAppSources: false }])
   );
 
+  // nuxt-site-config matches a multiTenancy entry by host alone (first match wins, no path
+  // awareness), so entries must be grouped by host rather than emitted one per domain — two
+  // domains sharing a host (e.g. a market's root and its /fr path) would otherwise produce a
+  // second entry no request could ever reach.
+  const domainsByHost = new Map<string, Array<{ domain: RcDomain; market: RcMarketLike }>>();
+  for (const market of markets) {
+    for (const domain of Object.values(market.domains)) {
+      const entries = domainsByHost.get(domain.host) ?? [];
+      entries.push({ domain, market });
+      domainsByHost.set(domain.host, entries);
+    }
+  }
+
+  const multiTenancy = [...domainsByHost.entries()].map(([host, entries]) => {
+    // Prefer the market's own default domain when it serves this host, then the domain at the
+    // host root (no path), then whichever domain was declared first.
+    const primary =
+      entries.find(({ domain, market }) => domain.id === market.defaultDomainId) ??
+      entries.find(({ domain }) => domain.path === undefined) ??
+      entries[0];
+    return {
+      hosts: [host, toDevHost(host)],
+      config: {
+        name: options.siteName ?? primary.market.name,
+        defaultLocale: localeOf(primary.domain.languageId),
+      },
+    };
+  });
+
   const site: DerivedSiteConfig = {
     env: resolveEnv(options, env),
     trailingSlash: laioutrrc.config?.trailingSlash ?? false,
-    multiTenancy: markets.flatMap((market) =>
-      Object.values(market.domains).map((domain) => ({
-        hosts: [domain.host, toDevHost(domain.host)],
-        config: {
-          name: options.siteName ?? market.name,
-          defaultLocale: localeOf(domain.languageId),
-        },
-      }))
-    ),
+    multiTenancy,
   };
   if (options.siteName) site.name = options.siteName;
   // 'auto' leaves it unset so getSiteIndexable falls back to env === 'production'.
