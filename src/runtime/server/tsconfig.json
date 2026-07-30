@@ -1,3 +1,4 @@
 {
-  "extends": "../../../.nuxt/tsconfig.server.json"
+  "extends": "../../../.nuxt/tsconfig.server.json",
+  "include": ["**/*", "../../../.nuxt/types/nuxt-sitemap-augments.d.ts", "../types/hooks.d.ts"]
 }

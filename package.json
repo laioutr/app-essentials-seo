@@ -30,7 +30,7 @@
     "prepack": "nuxt-module-build build",
     "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
     "test": "vitest run",
-    "test:types": "vue-tsc --noEmit && cd playground && vue-tsc --noEmit",
+    "test:types": "vue-tsc --noEmit && vue-tsc -p src/runtime/server/tsconfig.json --noEmit && cd playground && vue-tsc --noEmit",
     "test:watch": "vitest watch"
   },
   "browserslist": [
