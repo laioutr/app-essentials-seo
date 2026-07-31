@@ -219,6 +219,13 @@ rather than this module's own sources, reach for their hooks instead:
   instead, this module falls back to a single bounded read of up to `entriesPerRequest` entries and
   logs a warning naming the page type, so raising `entriesPerRequest` is the only way to cover more
   of that page type until its handler is fixed.
+- **The first request for a page-index-backed page type on a given host is the expensive one.** With
+  nothing built yet to serve, it waits on a full pass — `entriesPerRequest` entries enumerated, mapped
+  and stored — before it gets a response. Every request after that gets the stored snapshot
+  immediately, while a pass advances it in the background. Coverage grows one pass per request, so a
+  page type bigger than `entriesPerRequest` needs several requests, from crawlers or your own warm-up,
+  before its sitemap is complete. `entriesPerRequest` is the knob to trade against that: lower it to
+  shorten the first request, raise it to reach full coverage in fewer of them.
 
 ## Quick Setup
 
