@@ -38,7 +38,9 @@ describe('sitemap and robots', async () => {
     });
 
     it('omits a page whose default variant is noindex', async () => {
-      expect(await onHost('/__sitemap__/pages-de.xml', 'shop.ch')).not.toContain('/intern');
+      const xml = await onHost('/__sitemap__/pages-de.xml', 'shop.ch');
+      expect(xml).toContain('<loc>https://shop.ch/</loc>'); // guard: a blank or error body would also "not contain" /intern
+      expect(xml).not.toContain('/intern');
     });
 
     it('applies the fr path prefix on the multi-locale host', async () => {
@@ -54,8 +56,11 @@ describe('sitemap and robots', async () => {
       expect(first).toBe(9_999); // one entry is flagged noindex
 
       // Each request advances the accumulation in the background; poll until it stops growing.
+      // The budget is a wall-clock deadline rather than a fixed attempt count, kept generously below
+      // the test's own timeout, so a slower machine gets more polls instead of a spurious failure.
+      const deadline = Date.now() + 30_000;
       let latest = first;
-      for (let attempt = 0; attempt < 10; attempt++) {
+      while (Date.now() < deadline) {
         await new Promise((resolve) => setTimeout(resolve, 250));
         const next = count(await onHost('/__sitemap__/test-product-de.xml', 'shop.ch'));
         if (next === latest && next > first) break;

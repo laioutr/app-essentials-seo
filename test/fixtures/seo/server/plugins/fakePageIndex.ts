@@ -4,9 +4,6 @@ import { definePageTypeToken } from '@laioutr-core/core-types/frontend';
 const TOTAL = 25_000;
 const BATCH = 250;
 
-/** Counts how many upstream pages were fetched, so a test can assert a warm read does none. */
-export const stats = { pagesFetched: 0 };
-
 /**
  * Registers the token in the platform's page-type registry — matches `type: "test/product"` on the
  * fixture's dynamic page in laioutrrc.json.
@@ -18,7 +15,6 @@ export const TestProductPage = definePageTypeToken('test/product', {
 
 export const fakeList = ({ batchSize, startCursor }: { batchSize: number; startCursor?: string }) =>
   paginate(async ({ cursor }: { cursor: string | undefined }) => {
-    stats.pagesFetched++;
     const offset = cursor ? Number(cursor) : 0;
     const size = Math.min(batchSize ?? BATCH, TOTAL - offset);
     const entries = Array.from({ length: Math.max(size, 0) }, (_, i) => ({
