@@ -1,6 +1,33 @@
 # Changelog
 
 
+## v1.1.1
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.1.0...v1.1.1)
+
+### 🩹 Fixes
+
+- Stop shipping the sitemap XSL stylesheet to production ([0f2c07c](https://github.com/laioutr/app-essentials-seo/commit/0f2c07c))
+
+### 💅 Refactors
+
+- Take completion from the page-index stream contract ([3d9547b](https://github.com/laioutr/app-essentials-seo/commit/3d9547b))
+
+### 📖 Documentation
+
+- Add the upstream-adoption handoff and the snapshot state-machine plan ([99a75a6](https://github.com/laioutr/app-essentials-seo/commit/99a75a6))
+- Design the wall-clock deadline for an enumeration pass ([c3bfcfd](https://github.com/laioutr/app-essentials-seo/commit/c3bfcfd))
+- Correct which bound binds when the connector is slow ([682aed6](https://github.com/laioutr/app-essentials-seo/commit/682aed6))
+
+### 🏡 Chore
+
+- Lock dependencies at 0.38.2 and resolve the shopify devDependency ([a0538bc](https://github.com/laioutr/app-essentials-seo/commit/a0538bc))
+- **playground:** Run against a real project rc when one is present ([30f97d7](https://github.com/laioutr/app-essentials-seo/commit/30f97d7))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.1.0
 
 
