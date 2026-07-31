@@ -1,5 +1,5 @@
 import { buildAlternates, type SitemapUrl } from './alternates';
-import type { RenderMarket, RenderMarketDomain } from '@laioutr-core/core-types/rc';
+import type { RcPage, RenderMarket, RenderMarketDomain } from '@laioutr-core/core-types/rc';
 import { isDynamicPath, isPageIncluded } from '../../shared/pageSelection';
 import { composePath, unlocalize } from '../../shared/path';
 
@@ -9,19 +9,10 @@ export interface PageTypeSeo {
   include?: boolean;
 }
 
-interface ConfiguredPage {
-  id: string;
-  type: string;
-  path: string | Record<string, string>;
-  marketIds?: string[];
-  variants: Record<string, { conditions?: unknown; seo: { robots?: string } }>;
-  updatedAt?: string;
-}
-
 /** Every parameterless configured page this host serves in this locale. Finite and cheap, so it is
  *  always built in full rather than accumulated. */
 export const buildConfiguredPageUrls = (input: {
-  pages: Record<string, ConfiguredPage>;
+  pages: Record<string, RcPage>;
   market: RenderMarket;
   domain: RenderMarketDomain;
   markets: RenderMarket[];

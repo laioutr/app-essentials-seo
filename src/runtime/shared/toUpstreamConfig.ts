@@ -1,6 +1,7 @@
 import { isDynamicPath } from './pageSelection';
 import { buildSitemapName, CONFIGURED_PAGES_TOKEN } from './sitemapName';
 import type { ResolvedOptions } from '../../types';
+import type { RcMarket, RcMarketDomain, RcProject } from '@laioutr-core/core-types/rc';
 
 /** Chunk size for a single child sitemap. The protocol caps a sitemap file at 50 000 URLs. */
 const SITEMAP_CHUNK_SIZE = 50_000;
@@ -9,32 +10,14 @@ const SITEMAP_CHUNK_SIZE = 50_000;
  *  Disallow stops crawling, which stops a `noindex` from ever being read. */
 const INTERNAL_DISALLOW = ['/api/', '/_laioutr/'];
 
-interface RcDomain {
-  id: string;
-  host: string;
-  path?: string;
-  languageId: string;
-}
-
-interface RcMarketLike {
-  id: string;
-  name: string;
-  defaultDomainId?: string;
-  domains: Record<string, RcDomain>;
-}
-
-interface RcPageLike {
-  id: string;
-  type: string;
-  path: string | Record<string, string>;
-}
-
-export interface LaioutrRcLike {
-  config?: { trailingSlash?: boolean };
-  languages?: Record<string, { id: string; code: string }>;
-  markets?: Record<string, RcMarketLike>;
-  pages?: Record<string, RcPageLike>;
-}
+/**
+ * Not `RcProject` itself: `RcProject.laioutr` is a required field carrying a required
+ * `projectSecretKey`, but `module.ts` legitimately passes `{}` here for an unconfigured project.
+ * Typing that as `RcProject` would assert a guarantee build time does not make. Picking the four
+ * keys this module actually reads keeps drift in those shapes build-breaking without over-promising
+ * the rest of the project shape.
+ */
+export type LaioutrRcLike = Partial<Pick<RcProject, 'config' | 'languages' | 'markets' | 'pages'>>;
 
 export interface SitemapSourceDescriptor {
   name: string;
@@ -110,7 +93,7 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
   // awareness), so entries must be grouped by host rather than emitted one per domain — two
   // domains sharing a host (e.g. a market's root and its /fr path) would otherwise produce a
   // second entry no request could ever reach.
-  const domainsByHost = new Map<string, Array<{ domain: RcDomain; market: RcMarketLike }>>();
+  const domainsByHost = new Map<string, Array<{ domain: RcMarketDomain; market: RcMarket }>>();
   for (const market of markets) {
     for (const domain of Object.values(market.domains)) {
       const entries = domainsByHost.get(domain.host) ?? [];

@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import type { RcPage, RcPageVariant } from '@laioutr-core/core-types/rc';
 import { defaultVariant, isDynamicPath, isNoindexRobots, isPageIncluded } from '../../src/runtime/shared/pageSelection';
 
-const variant = (seo: { robots?: string }, conditions?: unknown) => ({ conditions, seo: { title: '', description: '', ...seo } });
+// The functions under test only read `conditions` and `seo.robots`; the rest of `RcPageVariant` is
+// irrelevant to these fixtures, so it is cast rather than constructed. Note `seo.title`/`.description`
+// are `LocalizedValue<string>` (locale maps) on the real type, not plain strings — left out here
+// rather than faked, since nothing under test reads them.
+const variant = (seo: { robots?: string }, conditions?: unknown) =>
+  ({ conditions, seo } as Partial<RcPageVariant>) as RcPageVariant;
 
 describe('isDynamicPath', () => {
   it('detects params in a plain path', () => {
@@ -62,7 +68,7 @@ describe('isNoindexRobots', () => {
 });
 
 describe('isPageIncluded', () => {
-  const base = { id: 'p1', type: 'core/landingpage', variants: { a: variant({}) } };
+  const base = { id: 'p1', type: 'core/landingpage', variants: { a: variant({}) } } as Partial<RcPage> as RcPage;
 
   it('includes a page with no market scoping', () => {
     expect(isPageIncluded(base, { marketId: 'm1', excludePageTypes: [] })).toBe(true);

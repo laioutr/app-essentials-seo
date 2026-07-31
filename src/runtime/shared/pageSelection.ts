@@ -1,17 +1,7 @@
+import type { RcPage, RcPageVariant } from '@laioutr-core/core-types/rc';
+
 /** The catch-all page type. It matches every unrouted URL and must never appear in a sitemap. */
 const CATCH_ALL_TYPE = 'core/404';
-
-export interface SelectablePageVariant {
-  conditions?: unknown;
-  seo: { robots?: string };
-}
-
-export interface SelectablePage {
-  id: string;
-  type: string;
-  marketIds?: string[];
-  variants: Record<string, SelectablePageVariant>;
-}
 
 /** True when any locale of the path carries a route param, which means it needs page-index to enumerate. */
 export const isDynamicPath = (path: string | Record<string, string>): boolean =>
@@ -23,9 +13,9 @@ export const isDynamicPath = (path: string | Record<string, string>): boolean =>
  * the page entirely. Conditions travel through Studio as JSON, where "no personalization" can be
  * authored as either a missing key or an explicit `null`, so both are treated as unconditional.
  */
-export const defaultVariant = <T extends { variants: Record<string, SelectablePageVariant> }>(
+export const defaultVariant = <T extends { variants: Record<string, RcPageVariant> }>(
   page: T
-): SelectablePageVariant | undefined => {
+): RcPageVariant | undefined => {
   const variants = Object.values(page.variants);
   return variants.find((variant) => variant.conditions === undefined || variant.conditions === null) ?? variants[0];
 };
@@ -42,7 +32,7 @@ export const isNoindexRobots = (robots: string | undefined): boolean =>
     .includes('noindex');
 
 /** Whether a configured page belongs in this market's sitemap. */
-export const isPageIncluded = (page: SelectablePage, options: { marketId: string; excludePageTypes: string[] }): boolean => {
+export const isPageIncluded = (page: RcPage, options: { marketId: string; excludePageTypes: string[] }): boolean => {
   if (page.type === CATCH_ALL_TYPE) return false;
   if (options.excludePageTypes.includes(page.type)) return false;
   if (page.marketIds?.length && !page.marketIds.includes(options.marketId)) return false;

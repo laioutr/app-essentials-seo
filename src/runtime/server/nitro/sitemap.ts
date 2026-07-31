@@ -89,7 +89,7 @@ export default defineNitroPlugin((nitro) => {
 
   /** The configured page whose route template a page type owns. */
   const templateFor = (token: string) =>
-    Object.values(rcProject.pages ?? {}).find((page: any) => page.type === token && isDynamicPath(page.path));
+    Object.values(rcProject.pages ?? {}).find((page) => page.type === token && isDynamicPath(page.path));
 
   nitro.hooks.hook('sitemap:sources', async (ctx: any) => {
     const parsed = parseSitemapName(ctx.sitemapName);
@@ -139,7 +139,9 @@ export default defineNitroPlugin((nitro) => {
         pageTypeSeo,
       });
       // Configured pages are handed to the extension hook as the loose `Record<string, unknown>` arm
-      // of its `entries` union — they are RC page objects, not enumerated page-index entries.
+      // of its `entries` union — they are RC page objects, not enumerated page-index entries. `RcPage`
+      // has no index signature of its own, so it still needs a cast to satisfy that arm; unlike
+      // before, the cast is now from the real production type instead of a local mirror shaped to fit.
       await announceBuild(urls, Object.values(rcProject.pages ?? {}) as unknown as Record<string, unknown>[]);
       emit(urls);
       return;
