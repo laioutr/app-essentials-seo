@@ -103,9 +103,28 @@ budgetMs: z.number().int().min(1).default(60_000),
 Both bounds are kept, and they bound different things: `entriesPerRequest` caps **upstream traffic**
 per request, `budgetMs` caps **request duration**. A pass stops at whichever fires first.
 
-At the measured ~950 entries/s, 60 s is ≈57 000 entries — well above the 10 000 default. So in normal
-operation the entry cap is still the binding constraint and **`budgetMs` behaves as a slow-upstream
-safety net**, which is what it is for.
+**Which bound binds is a property of the connector, not of the configuration.** Against Shopify's
+Storefront API at the measured ~950 entries/s, 60 s is ≈57 000 entries — far above the 10 000 default,
+so the entry cap binds and `budgetMs` is a safety net. Shopware's Storefront API is materially slower
+(**not measured here — worth measuring before tuning**); at a fifth of that rate the same budget buys
+≈11 000 entries, so the two bounds are comparable, and slower still makes `budgetMs` the primary bound
+and `entriesPerRequest` the vestigial one.
+
+That is the argument for keeping both rather than collapsing to one. Neither bound is redundant,
+because a project can carry a fast connector and a slow one at once — Shopify products and Shopware
+products in the same frontend — and each source gets whichever bound its own throughput reaches first.
+A single global `budgetMs` remains correct even so: it bounds *request duration*, and every source is
+enumerated in its own request.
+
+Two consequences of a slow connector worth stating plainly:
+
+- **A cold request blocks for up to `budgetMs`.** On a slow connector that is the full 60 s before a
+  crawler gets its first response for that page type. Every later request is served from the snapshot
+  immediately, so this is a one-off per page type per host, but it is real and it is most visible
+  exactly where the catalogue is largest.
+- **The overshoot in §4 scales with the connector.** Breaking only after collecting means the pass can
+  exceed its budget by one upstream page — ~0.26 s on the measured store, proportionally more on a
+  slow one. Still bounded by a single page fetch, never by the remaining catalogue.
 
 One budget serves cold and background passes alike. A background pass runs under `event.waitUntil`,
 which the same platform limit bounds, so a second value would be two things to reason about for no
@@ -128,9 +147,14 @@ which cannot resume: bounded in entries, unbounded in time, and the only remaini
 without a clock. It takes the same deadline. Its existing warning says the sitemap is "capped at
 `{take}` URLs"; that wording must change, because the real cap becomes whichever bound fires first.
 
-**A new diagnostic.** Log once per source when a pass stops *on the deadline* rather than on `take` or
-exhaustion. A platform kill is undetectable from inside, so this is the only signal that would reveal
-a `budgetMs` set above the host's limit.
+**A new diagnostic, and it must be once per source per process.** Log when a pass stops *on the
+deadline* rather than on `take` or exhaustion — a platform kill is undetectable from inside, so this
+is the only signal that would reveal a `budgetMs` set above the host's limit.
+
+The naive version logs on every pass, which is fine when the budget is a rare safety net and is
+constant noise on a slow connector, where hitting the deadline is the *normal* outcome of every pass
+until a page type converges (§5). Use the `warnOnce` keyed by sitemap name that `sitemap.ts:25-30`
+already has, so a slow connector reports the fact once rather than once per crawl.
 
 ## 7. The risk this design carries
 
