@@ -119,13 +119,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
 
-    // Install peer-dependency modules only on prepare-step.
-    // This makes auto-imports and import-aliases work. Remove any modules you might not need.
+    // Installed on the prepare step alone, so `#laioutr/*` and the orchestr server imports this
+    // module's runtime resolves against exist when types are generated.
+    //
+    // frontend-core is the only one worth naming. It installs orchestr itself, so listing that here
+    // too would only hit `defineNuxtModule`'s already-installed short-circuit. @nuxt/image would be
+    // worse than redundant: frontend-core installs it *with* the image-provider config it collects
+    // from the configured apps, and whichever install runs first wins, so a bare one here can beat it
+    // and leave that config to be merged in after the module has already read its options. Nothing in
+    // this package renders, so no component library belongs here either.
     if (nuxt.options._prepare) {
-      await installModule('@nuxt/image');
       await installModule('@laioutr-core/frontend-core');
-      await installModule('@laioutr-core/orchestr');
-      await installModule('@laioutr-app/ui');
     }
 
     // Installed unconditionally: these are this package's own dependencies, not peer modules the
