@@ -169,7 +169,7 @@ export default defineNitroPlugin((nitro) => {
       runRebuildPass({
         previous,
         now: Date.now(),
-        take: options.sitemap.rebuildBatchSize,
+        take: options.sitemap.entriesPerRequest,
         mapEntries,
         onPassBuilt: announceBuild,
         label: `${parsed.token} (${parsed.locale})`,

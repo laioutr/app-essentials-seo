@@ -22,8 +22,8 @@ export const SitemapOptionsSchema = z.object({
   defaultChangefreq: PageTypeSeoSchema.shape.changefreq,
   defaultPriority: z.number().min(0).max(1).optional(),
   includeImages: z.boolean().default(true),
-  /** Entries pulled per snapshot rebuild pass. Bounds the work one request can do. */
-  rebuildBatchSize: z.number().int().min(1).default(10_000),
+  /** Entries a single request may pull for a snapshot rebuild pass. Bounds the work one request can do. */
+  entriesPerRequest: z.number().int().min(1).default(10_000),
 });
 
 export const RobotsOptionsSchema = z.object({

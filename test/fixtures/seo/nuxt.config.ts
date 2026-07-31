@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   laioutr: { laioutrrc: laioutrrc as any },
   '@laioutr/app-essentials-seo': {
     sitemap: {
-      rebuildBatchSize: 10_000,
+      entriesPerRequest: 10_000,
       excludePageTypes: [],
     },
   },

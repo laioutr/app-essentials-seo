@@ -62,7 +62,7 @@ app config key, since Cockpit only permits app configuration under the package n
 | `defaultChangefreq` | `'always' \| 'hourly' \| 'daily' \| 'weekly' \| 'monthly' \| 'yearly' \| 'never'` | _unset_ | Fallback `changefreq` for a URL that doesn't set its own. |
 | `defaultPriority` | `number` (0–1) | _unset_ | Fallback `priority` for a URL that doesn't set its own. |
 | `includeImages` | `boolean` | `true` | Emits an `<image:image>` entry when a page-index entry carries a preview image. Only applies to page-index-backed sources — configured pages never carry an image. |
-| `rebuildBatchSize` | `integer` (≥ 1) | `10000` | Entries pulled per snapshot rebuild pass. See "Operational notes" below for what happens at the boundary. |
+| `entriesPerRequest` | `integer` (≥ 1) | `10000` | How many entries a single request may pull for a snapshot rebuild pass. See "Operational notes" below for what happens at the boundary. |
 
 **`sitemap.pageTypes[]`** — per-page-type SEO metadata, one entry per page type you want to override.
 It only tunes how a page type's URLs are described; to keep a page type out of the sitemap
@@ -210,14 +210,15 @@ rather than this module's own sources, reach for their hooks instead:
   deployment in the index competes with production for the same content, so this module warns at
   build time when the two are combined, naming the resolved environment. Reach for `'auto'` unless
   you specifically want the non-production URLs crawled.
-- **A page type whose page-index registration ignores `startCursor` is capped at
-  `rebuildBatchSize` URLs.** Sitemaps for page-index-backed page types are built incrementally,
-  resuming from where the previous pass left off. Resumption depends on the registration's list
-  handler threading the cursor through — returning `paginate(fn, startCursor)` is what makes a page
-  type fully enumerable across passes. When a handler ignores `startCursor` instead, this module
-  falls back to a single bounded read of up to `rebuildBatchSize` entries and logs a warning naming
-  the page type, so raising `rebuildBatchSize` is the only way to cover more of that page type until
-  its handler is fixed.
+- **A page type whose page-index registration ignores `startCursor` never pulls more than
+  `entriesPerRequest` entries — and its sitemap can land fewer URLs than that, since a `noindex` or
+  unfillable entry never becomes one.** Sitemaps for page-index-backed page types are built
+  incrementally, resuming from where the previous pass left off. Resumption depends on the
+  registration's list handler threading the cursor through — returning `paginate(fn, startCursor)`
+  is what makes a page type fully enumerable across passes. When a handler ignores `startCursor`
+  instead, this module falls back to a single bounded read of up to `entriesPerRequest` entries and
+  logs a warning naming the page type, so raising `entriesPerRequest` is the only way to cover more
+  of that page type until its handler is fixed.
 
 ## Quick Setup
 
