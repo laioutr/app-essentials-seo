@@ -34,9 +34,27 @@ const warnOnce = (key: string, message: string) => {
  */
 const inFlightPasses = new Map<string, Promise<void>>();
 
-const scheduleBackgroundPass = (event: { waitUntil: (promise: Promise<unknown>) => void }, key: string, run: () => Promise<void>): void => {
+const scheduleBackgroundPass = (
+  event: { waitUntil: (promise: Promise<unknown>) => void },
+  host: string,
+  sitemapName: string,
+  run: () => Promise<void>
+): void => {
+  const key = `${host}:${sitemapName}`;
   if (inFlightPasses.has(key)) return;
-  const promise = run().finally(() => inFlightPasses.delete(key));
+  const promise = run()
+    // `event.waitUntil` on the node preset only pushes this promise into an array nitropack never
+    // awaits or catches, so a rejection here would otherwise surface as a Node unhandled rejection —
+    // fatal by default — turning one bad background pass into a dead process. Catching and warning
+    // keeps the failure local to this source; the next request for it just retries.
+    .catch((error: unknown) => {
+      console.warn(
+        `[${MODULE_NAME}] background sitemap rebuild failed for host "${host}", sitemap "${sitemapName}": ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    })
+    .finally(() => inFlightPasses.delete(key));
   inFlightPasses.set(key, promise);
   event.waitUntil(promise);
 };
@@ -139,7 +157,6 @@ export default defineNitroPlugin((nitro) => {
 
     const live = await store.readLive(host, ctx.sitemapName);
     const state = snapshotState(live, Date.now());
-    const key = `${host}:${ctx.sitemapName}`;
 
     if (state === 'missing') {
       const next = await pass(null);
@@ -150,10 +167,12 @@ export default defineNitroPlugin((nitro) => {
 
     if (state === 'incomplete') {
       // First build still accumulating: serve the partial and advance it in the background.
-      scheduleBackgroundPass(ctx.event, key, () => pass(live).then((next) => store.writeLive(host, ctx.sitemapName, next)));
+      scheduleBackgroundPass(ctx.event, host, ctx.sitemapName, () =>
+        pass(live).then((next) => store.writeLive(host, ctx.sitemapName, next))
+      );
     } else if (state === 'stale') {
       // Refreshes accumulate beside the live value so a reader never observes a partial.
-      scheduleBackgroundPass(ctx.event, key, async () => {
+      scheduleBackgroundPass(ctx.event, host, ctx.sitemapName, async () => {
         const pending = await store.readPending(host, ctx.sitemapName);
         const next = await pass(pending);
         await store.writePending(host, ctx.sitemapName, next);

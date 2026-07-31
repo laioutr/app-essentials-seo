@@ -5,7 +5,10 @@
 // own runtime produces for them.
 declare module '#laioutr/rc' {
   import type { RcProject } from '@laioutr-core/core-types/rc';
-  export const rcProject: RcProject;
+  // frontend-core's sanitiser deletes `config` off `rcProject` before it reaches this process — the
+  // real value arrives through public runtime config instead — so it is typed out here too, turning
+  // a `rcProject.config` access into the compile error it would be at runtime.
+  export const rcProject: Omit<RcProject, 'config'>;
 }
 
 declare module '#laioutr/i18n-config' {
