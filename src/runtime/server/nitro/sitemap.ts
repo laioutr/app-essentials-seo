@@ -12,7 +12,8 @@ import { buildConfiguredPageUrls } from '../lib/configuredPageUrls';
 import { resolveHostContext } from '../lib/hostContext';
 import { mapPageIndexEntries } from '../lib/pageIndexUrls';
 import { runRebuildPass } from '../lib/rebuild';
-import { createSnapshotStore, type Snapshot, snapshotState } from '../lib/snapshotStore';
+import { serveSource } from '../lib/serveSource';
+import { createSnapshotStore, type Snapshot } from '../lib/snapshotStore';
 // #laioutr/i18n-config and #laioutr/rc are virtual Nitro aliases that exist only at build time;
 // their ambient declarations live in ../types/rc.d.ts, which import-x cannot see.
 // eslint-disable-next-line import-x/no-unresolved
@@ -177,32 +178,16 @@ export default defineNitroPlugin((nitro) => {
         listPages: ({ take }) => listPages(token, { clientEnv, event: ctx.event, take }),
       });
 
-    const live = await store.readLive(host, ctx.sitemapName);
-    const state = snapshotState(live, Date.now());
-
-    if (state === 'missing') {
-      const next = await pass(null);
-      await store.writeLive(host, ctx.sitemapName, next);
-      emit(next.urls);
-      return;
-    }
-
-    if (state === 'incomplete') {
-      // First build still accumulating: serve the partial and advance it in the background.
-      scheduleBackgroundPass(ctx.event, host, ctx.sitemapName, () =>
-        pass(live).then((next) => store.writeLive(host, ctx.sitemapName, next))
-      );
-    } else if (state === 'stale') {
-      // Refreshes accumulate beside the live value so a reader never observes a partial.
-      scheduleBackgroundPass(ctx.event, host, ctx.sitemapName, async () => {
-        const pending = await store.readPending(host, ctx.sitemapName);
-        const next = await pass(pending);
-        await store.writePending(host, ctx.sitemapName, next);
-        if (next.complete) await store.promotePending(host, ctx.sitemapName);
-      });
-    }
-
-    emit(live!.urls);
+    emit(
+      await serveSource({
+        store,
+        host,
+        sitemapName: ctx.sitemapName,
+        now: Date.now(),
+        pass,
+        schedule: (run) => scheduleBackgroundPass(ctx.event, host, ctx.sitemapName, run),
+      })
+    );
   });
 
   nitro.hooks.hook('sitemap:index-resolved', (ctx: any) => {
