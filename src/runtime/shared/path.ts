@@ -50,10 +50,15 @@ export const composePath = (prefix: string, path: string, trailingSlash: boolean
  * callers treat as "this page has no route here" rather than substituting a default.
  */
 export const unlocalize = <T>(value: T | Record<string, T>, localeChain: string[]): T | undefined => {
-  if (value === null || typeof value !== 'object') return value as T;
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== 'object') return value as T;
   const map = value as Record<string, T>;
   for (const locale of localeChain) {
-    if (Object.hasOwn(map, locale) && map[locale] !== undefined && map[locale] !== '') return map[locale];
+    const localized = map[locale];
+    // Clearing a localized field in Studio leaves `null` behind rather than removing the key, and an
+    // empty string is not a route either. Both mean "nothing authored for this locale", so the chain
+    // keeps walking — ending on one would drop a page that has a perfectly good fallback.
+    if (localized !== undefined && localized !== null && localized !== '') return localized;
   }
   return undefined;
 };

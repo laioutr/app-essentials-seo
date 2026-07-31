@@ -91,4 +91,19 @@ describe('unlocalize', () => {
   it('returns undefined when no locale in the chain matches', () => {
     expect(unlocalize({ fr: '/a-propos' }, ['de', 'en'])).toBeUndefined();
   });
+
+  it('walks past an empty string rather than treating it as a path', () => {
+    expect(unlocalize({ de: '', en: '/about' }, ['de', 'en'])).toBe('/about');
+  });
+
+  it('walks past a null the way Studio writes a cleared field', () => {
+    // A cleared localized field arrives as null, not as a missing key. Returning it would end the
+    // chain and drop the page from that locale's sitemap even though a fallback exists.
+    expect(unlocalize({ de: null, en: '/about' }, ['de', 'en'])).toBe('/about');
+  });
+
+  it('never returns null, which its signature already promised', () => {
+    expect(unlocalize(null as never, ['de'])).toBeUndefined();
+    expect(unlocalize({ de: null } as never, ['de'])).toBeUndefined();
+  });
 });
