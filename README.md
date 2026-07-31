@@ -57,21 +57,22 @@ app config key, since Cockpit only permits app configuration under the package n
 | Field | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `enabled` | `boolean` | `true` | |
-| `excludePageTypes` | `string[]` | `[]` | Page types dropped from the sitemap entirely — both configured pages of that type and any page-index source for it. |
+| `excludePageTypes` | `string[]` | `[]` | Page type tokens to drop from the sitemap entirely, and the only way to do so. Applies to both source kinds: a configured page of an excluded type never becomes a URL, and a page-index-backed type gets no child sitemap at all — it is neither enumerated nor listed in the index. |
 | `pageTypes` | `PageTypeSeo[]` | `[]` | Per-page-type overrides. See below. |
 | `defaultChangefreq` | `'always' \| 'hourly' \| 'daily' \| 'weekly' \| 'monthly' \| 'yearly' \| 'never'` | _unset_ | Fallback `changefreq` for a URL that doesn't set its own. |
 | `defaultPriority` | `number` (0–1) | _unset_ | Fallback `priority` for a URL that doesn't set its own. |
 | `includeImages` | `boolean` | `true` | Emits an `<image:image>` entry when a page-index entry carries a preview image. Only applies to page-index-backed sources — configured pages never carry an image. |
 | `rebuildBatchSize` | `integer` (≥ 1) | `10000` | Entries pulled per snapshot rebuild pass. See "Operational notes" below for what happens at the boundary. |
 
-**`sitemap.pageTypes[]`** — one entry per page type you want to override:
+**`sitemap.pageTypes[]`** — per-page-type SEO metadata, one entry per page type you want to override.
+It only tunes how a page type's URLs are described; to keep a page type out of the sitemap
+altogether, list it in `excludePageTypes`.
 
 | Field | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `pageType` | `string` | yes | The page type token, e.g. `ecommerce/product-detail-page`. |
 | `priority` | `number` (0–1) | no | |
 | `changefreq` | same enum as `defaultChangefreq` | no | |
-| `include` | `boolean` | no | Set `false` to drop pages of this type from the sitemap, on both source kinds. A configured page of this type is left out of its sitemap; a page-index-backed source is never enumerated and emits an empty sitemap, still listed in the index. Use `excludePageTypes` to drop the child sitemap from the index too. |
 
 ### `robots`
 

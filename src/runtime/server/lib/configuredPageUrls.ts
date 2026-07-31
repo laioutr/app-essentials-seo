@@ -6,7 +6,6 @@ import { composePath, unlocalize } from '../../shared/path';
 export interface PageTypeSeo {
   priority?: number;
   changefreq?: string;
-  include?: boolean;
 }
 
 /** Every parameterless configured page this host serves in this locale. Finite and cheap, so it is
@@ -25,7 +24,6 @@ export const buildConfiguredPageUrls = (input: {
 
   for (const page of Object.values(pages)) {
     if (isDynamicPath(page.path)) continue;
-    if (pageTypeSeo[page.type]?.include === false) continue;
     if (!isPageIncluded(page, { marketId: market.id, excludePageTypes })) continue;
 
     const path = unlocalize(page.path, domain.language.localeChain);

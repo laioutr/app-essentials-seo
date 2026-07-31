@@ -44,11 +44,6 @@
       "id": "p_article", "type": "test/article", "path": { "de": "/artikel/:slug", "fr": "/articles/:slug" }, "queries": {},
       "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
       "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
-    },
-    "p_hidden_pdp": {
-      "id": "p_hidden_pdp", "type": "test/hidden", "path": { "de": "/versteckt/:slug", "fr": "/cache/:slug" }, "queries": {},
-      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
-      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
     }
   }
 }

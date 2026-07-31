@@ -55,8 +55,8 @@ describe('buildConfiguredPageUrls', () => {
     expect(home?.changefreq).toBe('daily');
   });
 
-  it('omits a page type turned off with include false', () => {
-    const urls = build({ pageTypeSeo: { 'core/landingpage': { include: false } } });
+  it('omits every page of an excluded page type', () => {
+    const urls = build({ excludePageTypes: ['core/landingpage'] });
     expect(urls.map((url) => url.loc)).not.toContain('/preise');
   });
 

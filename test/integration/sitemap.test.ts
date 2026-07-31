@@ -80,16 +80,6 @@ describe('sitemap and robots', async () => {
     });
   });
 
-  describe('include: false', () => {
-    it('empties a page-index-backed source', async () => {
-      // test/hidden enumerates the very entries test/article turns into URLs, so nothing but the
-      // exclusion can account for an empty sitemap here.
-      const xml = await onHost('/__sitemap__/test-hidden-de.xml', 'shop.ch');
-      expect(xml).toContain('<urlset');
-      expect(xml).not.toContain('<loc>');
-    });
-  });
-
   describe('the extension hook', () => {
     // The fixture registers a hook plugin that keeps only the three "featured" articles, deciding
     // from `ctx.entries`, and logs every call it receives at /__sitemap-hook-log. Six articles fit in

@@ -8,7 +8,6 @@ export default defineNuxtConfig({
     sitemap: {
       rebuildBatchSize: 10_000,
       excludePageTypes: [],
-      pageTypes: [{ pageType: 'test/hidden', include: false }],
     },
   },
   compatibilityDate: '2025-09-11',

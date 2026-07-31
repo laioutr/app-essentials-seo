@@ -7,7 +7,6 @@ const PageTypeSeoSchema = z.object({
   pageType: z.string(),
   priority: z.number().min(0).max(1).optional(),
   changefreq: z.enum(['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never']).optional(),
-  include: z.boolean().optional(),
 });
 
 const RobotsGroupSchema = z.object({
