@@ -37,6 +37,27 @@ describe('resolveHostContext', () => {
     expect(resolveHostContext(i18nConfig, 'shop.ch:3000', 'de')?.market.id).toBe('mkt_ch');
   });
 
+  it('resolves a www host onto the market configured without it', () => {
+    // Falling through to the default market here would emit that market's paths on this host.
+    expect(resolveHostContext(i18nConfig, 'www.shop.de', 'de')?.market.id).toBe('mkt_de');
+  });
+
+  it('picks a domain on the requested host even when the request carries www', () => {
+    // shop.de rather than shop.ch on purpose: shop.ch is the default market, so it would resolve
+    // correctly by accident. Without the alternation this lands on the default market and returns
+    // that market's German domain — another host's page set, served under this one.
+    expect(resolveHostContext(i18nConfig, 'www.shop.de', 'de')?.domain.id).toBe('d3');
+  });
+
+  it('keeps a bracketed IPv6 authority intact while stripping its port', () => {
+    const ipv6 = {
+      markets: [marketDe],
+      hostToMarket: { '[::1]': marketDe },
+      defaultMarket: marketCh,
+    } as never;
+    expect(resolveHostContext(ipv6, '[::1]:3000', 'de')?.market.id).toBe('mkt_de');
+  });
+
   it('falls back to the default market for an unknown host', () => {
     expect(resolveHostContext(i18nConfig, 'preview-abc.vercel.app', 'de')?.market.id).toBe('mkt_ch');
   });

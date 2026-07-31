@@ -17,10 +17,18 @@ export interface HostContext {
  * sitemap.
  */
 export const resolveHostContext = (i18nConfig: RenderI18nConfig, host: string, locale: string): HostContext | null => {
-  const bareHost = host.split(':')[0];
-  const market = i18nConfig.hostToMarket[bareHost] ?? i18nConfig.defaultMarket;
+  // Anchored to the port rather than split on the first colon, which would truncate a bracketed
+  // IPv6 authority to "[".
+  const bareHost = host.replace(/:\d+$/, '');
+  // A project configures one spelling of its host and serves both, so matching only the literal one
+  // sends a `www.` request to the default market — and this file would then carry that market's
+  // paths under this host. Both lookups below tolerate the prefix, as request routing does.
+  const wwwAlt = bareHost.startsWith('www.') ? bareHost.slice(4) : `www.${bareHost}`;
+  const market = i18nConfig.hostToMarket[bareHost] ?? i18nConfig.hostToMarket[wwwAlt] ?? i18nConfig.defaultMarket;
 
-  const onThisHost = market.domains.filter((domain) => domain.host === bareHost || domain.devHost === bareHost);
+  const onThisHost = market.domains.filter(
+    (domain) => domain.host === bareHost || domain.host === wwwAlt || domain.devHost === bareHost
+  );
   const candidates = onThisHost.length > 0 ? onThisHost : market.domains;
   const domain = candidates.find((candidate) => candidate.language.code === locale);
   if (!domain) return null;
