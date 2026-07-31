@@ -1,7 +1,7 @@
 import { z } from 'zod/v4';
 
 /** Package name and Nuxt config key. Cockpit only permits app config under the package name. */
-export const MODULE_NAME = '@laioutr/app-essentials-seo';
+export { MODULE_NAME } from './runtime/shared/moduleName';
 
 const PageTypeSeoSchema = z.object({
   pageType: z.string(),

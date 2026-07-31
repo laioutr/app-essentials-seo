@@ -1,6 +1,7 @@
 import { dedupeByLoc } from './pageIndexUrls';
 import { type Snapshot, stamp } from './snapshotStore';
 import type { SitemapUrl } from './alternates';
+import { MODULE_NAME } from '../../shared/moduleName';
 
 interface EntryStreamLike {
   toArray(): Promise<any[]>;
@@ -75,7 +76,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
   // listPages is the best this pass can offer until the handler threads the cursor through.
   const runNonResumableFallback = async (error: unknown): Promise<Snapshot> => {
     console.warn(
-      `[@laioutr/app-essentials-seo] ${label ?? 'page type'} cannot be resumed because its pageIndex list handler ignores startCursor. ` +
+      `[${MODULE_NAME}] ${label ?? 'page type'} cannot be resumed because its pageIndex list handler ignores startCursor. ` +
         `Its sitemap is capped at ${take} URLs. Return \`paginate(fn, startCursor)\` from the handler to fix it. ` +
         `Original error: ${messageOf(error)}`
     );
@@ -84,7 +85,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
     try {
       fallbackEntries = await listPages({ take }).toArray();
     } catch (fallbackError) {
-      console.warn(`[@laioutr/app-essentials-seo] fallback enumeration failed: ${messageOf(fallbackError)}`);
+      console.warn(`[${MODULE_NAME}] fallback enumeration failed: ${messageOf(fallbackError)}`);
       return keep(true, undefined);
     }
     // Outside the catch above: this is a capped build like any other, so it owes the caller the same
@@ -109,7 +110,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
   } catch (error) {
     if (isNonResumable(error)) return runNonResumableFallback(error);
     console.warn(
-      `[@laioutr/app-essentials-seo] enumeration pass failed for ${label ?? 'a page type'}; keeping the last resume point. ` +
+      `[${MODULE_NAME}] enumeration pass failed for ${label ?? 'a page type'}; keeping the last resume point. ` +
         `Original error: ${messageOf(error)}`
     );
     return keep(false, previous?.resumeFrom);

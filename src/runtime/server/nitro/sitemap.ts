@@ -5,6 +5,7 @@ import type { SitemapSourceDescriptor } from '../../shared/toUpstreamConfig';
 import type { SitemapUrl } from '../lib/alternates';
 import type { PageTypeToken } from '@laioutr-core/core-types/frontend';
 import type { PageIndexEntry } from '@laioutr-core/core-types/orchestr';
+import { MODULE_NAME } from '../../shared/moduleName';
 import { isDynamicPath } from '../../shared/pageSelection';
 import { buildSitemapName, CONFIGURED_PAGES_TOKEN, parseSitemapName } from '../../shared/sitemapName';
 import { buildConfiguredPageUrls } from '../lib/configuredPageUrls';
@@ -19,7 +20,6 @@ import { i18nConfig } from '#laioutr/i18n-config';
 // eslint-disable-next-line import-x/no-unresolved
 import { rcProject } from '#laioutr/rc';
 
-const MODULE_NAME = '@laioutr/app-essentials-seo';
 const CACHE_CONTROL = 'public, max-age=600, s-maxage=86400, stale-while-revalidate=604800';
 
 const warned = new Set<string>();

@@ -1,3 +1,4 @@
+import { MODULE_NAME } from './moduleName';
 import { isDynamicPath } from './pageSelection';
 import { buildSitemapName, CONFIGURED_PAGES_TOKEN } from './sitemapName';
 import type { ResolvedOptions } from '../../types';
@@ -134,7 +135,7 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
   // raw option, so the env-variable fallbacks count too.
   if (options.indexable === 'always' && resolvedEnv !== 'production') {
     console.warn(
-      `[@laioutr/app-essentials-seo] indexable is 'always' on a "${resolvedEnv}" deployment, so search engines ` +
+      `[${MODULE_NAME}] indexable is 'always' on a "${resolvedEnv}" deployment, so search engines ` +
         'will index it. Its URLs can then compete with production for the same content. ' +
         "Use indexable: 'auto' to let the environment decide, or 'never' to keep this deployment out of search."
     );
