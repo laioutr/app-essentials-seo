@@ -5,7 +5,17 @@ import { MODULE_NAME } from '../../shared/moduleName';
 
 interface EntryStreamLike {
   toArray(): Promise<any[]>;
-  readonly endCursor?: string | undefined;
+}
+
+/**
+ * The part of orchestr's `ResumablePageEntryStream` this module reads, both only meaningful once the
+ * stream has been consumed. That stream also reports `progressed`, which the contract says to stop a
+ * loop on; it is not read here because the only state that sets it without setting `exhausted` is a
+ * pass that threw, and those are handled by their rejection long before completion is decided.
+ */
+interface ResumableEntryStreamLike extends EntryStreamLike {
+  readonly endCursor: string | undefined;
+  readonly exhausted: boolean;
 }
 
 export interface RebuildPassInput {
@@ -21,7 +31,7 @@ export interface RebuildPassInput {
    */
   onPassBuilt?: (urls: SitemapUrl[], entries: any[]) => void | Promise<void>;
   /** Injected `listPagesFrom`. Its stream rejects when the registration ignores `startCursor`. */
-  listPagesFrom: (options: { take: number; resumeFrom: string | undefined }) => EntryStreamLike;
+  listPagesFrom: (options: { take: number; resumeFrom: string | undefined }) => ResumableEntryStreamLike;
   /** Injected `listPages`, used only for the non-resumable fallback. */
   listPages?: (options: { take: number }) => EntryStreamLike;
   /** Named in the non-resumable diagnostic so the author knows which registration to fix. */
@@ -94,7 +104,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
     return keep(true, undefined);
   };
 
-  let stream: EntryStreamLike;
+  let stream: ResumableEntryStreamLike;
   try {
     stream = listPagesFrom({ take, resumeFrom: previous?.resumeFrom });
   } catch (error) {
@@ -118,8 +128,10 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
 
   await accumulate(entries);
 
-  // Read only after one complete consumption: undefined means "start here" going in and "exhausted"
-  // coming out.
-  const endCursor = stream.endCursor;
-  return keep(endCursor === undefined, endCursor);
+  // Both read only after one complete consumption. Completion is the stream's to report rather than
+  // ours to infer from the token: the two agree for every pass that reaches here, but a failed pass
+  // reports the token it started from, which is `undefined` on a first pass and would read as
+  // "exhausted" to anyone inferring. Those are caught by their rejection above — asking the stream
+  // directly is what keeps that a local detail of the catch rather than a load-bearing one here.
+  return keep(stream.exhausted, stream.endCursor);
 };

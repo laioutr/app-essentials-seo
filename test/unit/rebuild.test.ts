@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { runRebuildPass } from '../../src/runtime/server/lib/rebuild';
 
-/** Fake matching orchestr's ResumablePageEntryStream: endCursor is only defined after consumption. */
+/**
+ * Fake matching orchestr's ResumablePageEntryStream: both fields are only meaningful after
+ * consumption, and `exhausted` is derived here the way the real stream relates the two — the token is
+ * undefined exactly when the enumeration ran out — so a caller states the end state once.
+ */
 const fakeStream = (entries: any[], endCursor: string | undefined) => {
   let consumed = false;
   return {
@@ -12,18 +16,25 @@ const fakeStream = (entries: any[], endCursor: string | undefined) => {
     get endCursor() {
       return consumed ? endCursor : undefined;
     },
+    get exhausted() {
+      return consumed && endCursor === undefined;
+    },
     async *[Symbol.asyncIterator] () {
       yield* entries;
     },
   };
 };
 
-/** Fake whose toArray() rejects, matching how orchestr's iterateResumed surfaces its errors. */
+/**
+ * Fake whose toArray() rejects, matching how orchestr's iterateResumed surfaces its errors. A failed
+ * pass hands back the token it started from, so nothing about it is durable.
+ */
 const rejectingStream = (message: string) => ({
   toArray: async () => {
     throw new Error(message);
   },
   endCursor: undefined,
+  exhausted: false,
   async *[Symbol.asyncIterator] () {},
 });
 
@@ -55,10 +66,23 @@ describe('runRebuildPass', () => {
     expect(next.urls.map((u) => u.loc)).toEqual(['/p/a', '/p/c']);
   });
 
-  it('marks complete when the stream reports an undefined endCursor after consumption', async () => {
+  it('marks complete when the stream reports the enumeration exhausted', async () => {
     const next = await runRebuildPass({ ...base, previous: null, listPagesFrom: () => fakeStream([entry('a')], undefined) });
     expect(next.complete).toBe(true);
     expect(next.resumeFrom).toBeUndefined();
+  });
+
+  it('completes and drops the token on a pass that resumes exactly at the end', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
+    // The empty final pass: nothing left to hand over, and the enumeration says so. Ordinary, so it
+    // completes quietly rather than reporting the accumulation cut short.
+    const next = await runRebuildPass({ ...base, previous, listPagesFrom: () => fakeStream([], undefined) });
+    expect(next.complete).toBe(true);
+    expect(next.resumeFrom).toBeUndefined();
+    expect(next.urls.map((u) => u.loc)).toEqual(['/p/a']);
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it('does not re-add a loc already accumulated', async () => {

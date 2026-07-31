@@ -46,8 +46,8 @@
   },
   "devDependencies": {
     "@laioutr-app/shopify": "^0.22.1",
-    "@laioutr-core/devtools": "^0.38.1",
-    "@laioutr-core/orchestr": "^0.38.1",
+    "@laioutr-core/devtools": "^0.38.2",
+    "@laioutr-core/orchestr": "^0.38.2",
     "@laioutr/eslint-config": "^1.8.8",
     "@laioutr/prettier-config": "^1.1.0",
     "@nuxt/devtools": "^2.6.3",
@@ -68,9 +68,9 @@
   },
   "peerDependencies": {
     "@laioutr-core/canonical-types": ">=0.26.3",
-    "@laioutr-core/core-types": ">=0.38.1",
-    "@laioutr-core/frontend-core": ">=0.38.1",
-    "@laioutr-core/orchestr": ">=0.38.1"
+    "@laioutr-core/core-types": ">=0.38.2",
+    "@laioutr-core/frontend-core": ">=0.38.2",
+    "@laioutr-core/orchestr": ">=0.38.2"
   },
   "engines": {
     "node": ">=22.12.0",
