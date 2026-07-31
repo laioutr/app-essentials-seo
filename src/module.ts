@@ -69,8 +69,6 @@ export default defineNuxtModule<ModuleOptions>({
       name: MODULE_NAME,
       version,
       orchestrDirs: [resolveRuntimeModule('server/orchestr')],
-      sections: [resolveRuntimeModule('app/sections')],
-      blocks: [resolveRuntimeModule('app/blocks')],
     });
 
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
