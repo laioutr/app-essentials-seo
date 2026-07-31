@@ -15,7 +15,7 @@ import type { H3Event } from 'h3';
  * package entry can re-export it: only `.ts` sources are compiled into `dist`, and a re-export
  * pointing into a hand-written `.d.ts` has no built file to resolve against.
  */
-export interface SitemapSourceResolveContext {
+export interface SitemapSourceBuiltContext {
   event: H3Event;
   /** null on the configured-pages source. */
   token: string | null;

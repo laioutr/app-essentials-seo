@@ -12,7 +12,7 @@ export type { ModuleOptions } from './types';
 // `essentials-seo:sitemap-source:built`. The `nitropack` augmentation types that payload inline,
 // which covers a handler written in place but not one lifted out into its own named function.
 export type { SitemapUrl } from './runtime/server/lib/alternates';
-export type { SitemapSourceResolveContext } from './runtime/types/sitemapSource';
+export type { SitemapSourceBuiltContext } from './runtime/types/sitemapSource';
 
 /** Reads a `RobotsGroupInput` field that may be a single value or an array, as an array. */
 const asArray = <T>(value: T | T[] | undefined): T[] => {

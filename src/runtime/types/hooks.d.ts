@@ -1,8 +1,8 @@
-import type { SitemapSourceResolveContext } from './sitemapSource';
+import type { SitemapSourceBuiltContext } from './sitemapSource';
 
 declare module 'nitropack' {
   interface NitroRuntimeHooks {
-    'essentials-seo:sitemap-source:built': (ctx: SitemapSourceResolveContext) => void | Promise<void>;
+    'essentials-seo:sitemap-source:built': (ctx: SitemapSourceBuiltContext) => void | Promise<void>;
   }
 }
 
