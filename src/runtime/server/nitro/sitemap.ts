@@ -73,8 +73,14 @@ export default defineNitroPlugin((nitro) => {
 
   // `parseSitemapName` inverts a registry, so every name the build declared has to be registered in
   // this process before the first request can be parsed.
+  //
+  // `??` alone is not enough here: `SitemapSourceDescriptor.token` is typed `string | null`, but a
+  // `null` array element does not survive Nuxt's runtime-config round-trip — it comes back as `''`
+  // (the type is inferred as `string` from sibling entries like "test/product", so runtime-config
+  // widens `null` to that type's empty value, same class of coercion the comment above already flags
+  // for this key). `||` catches both `null` and `''`, and a real page-type token is never empty.
   for (const source of options.sources) {
-    buildSitemapName(source.token ?? CONFIGURED_PAGES_TOKEN, source.locale);
+    buildSitemapName(source.token || CONFIGURED_PAGES_TOKEN, source.locale);
   }
 
   /** The configured page whose route template a page type owns. */

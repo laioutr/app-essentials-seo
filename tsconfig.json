@@ -1,4 +1,8 @@
 {
   "extends": "./.nuxt/tsconfig.json",
-  "exclude": ["dist", "node_modules", "playground", "src/runtime/server"]
+  // test/fixtures/seo/server is a Nitro server directory for the integration fixture, same as
+  // src/runtime/server above: its `#imports` are server-only auto-imports (defineOrchestr, paginate)
+  // that only exist once @nuxt/test-utils builds that fixture's own Nuxt app — this app-level config
+  // can no more resolve them than it can the module's own server runtime.
+  "exclude": ["dist", "node_modules", "playground", "src/runtime/server", "test/fixtures/seo/server"]
 }

@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "config": { "trailingSlash": false },
+  "laioutr": { "projectSecretKey": false },
+  "apps": [],
+  "templates": {},
+  "globalSections": {},
+  "languages": {
+    "lng_de": { "id": "lng_de", "code": "de", "name": "German", "fallbacks": [] },
+    "lng_fr": { "id": "lng_fr", "code": "fr", "name": "French", "fallbacks": [] }
+  },
+  "markets": {
+    "mkt_ch": {
+      "id": "mkt_ch", "slug": "switzerland", "name": "Switzerland", "currency": "CHF",
+      "regionCodes": ["CH"], "defaultDomainId": "dom_ch_de", "studio": {},
+      "domains": {
+        "dom_ch_de": { "id": "dom_ch_de", "host": "shop.ch", "languageId": "lng_de" },
+        "dom_ch_fr": { "id": "dom_ch_fr", "host": "shop.ch", "path": "/fr", "languageId": "lng_fr" }
+      }
+    },
+    "mkt_de": {
+      "id": "mkt_de", "slug": "germany", "name": "Germany", "currency": "EUR",
+      "regionCodes": ["DE"], "defaultDomainId": "dom_de_de", "studio": {},
+      "domains": { "dom_de_de": { "id": "dom_de_de", "host": "shop.de", "languageId": "lng_de" } }
+    }
+  },
+  "pages": {
+    "p_home": {
+      "id": "p_home", "type": "core/home", "path": "/", "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "p_hidden": {
+      "id": "p_hidden", "type": "core/landingpage", "path": "/intern", "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {}, "robots": "noindex, follow" }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "p_pdp": {
+      "id": "p_pdp", "type": "test/product", "path": { "de": "/produkte/:slug", "fr": "/produits/:slug" }, "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  }
+}

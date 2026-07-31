@@ -1,5 +1,8 @@
 # Laioutr files
 laioutrrc.json
+# The bare rule above protects real project secrets wherever they land; test fixtures are synthetic
+# and must be committed, or a fresh clone/CI silently loses them.
+!test/fixtures/**/laioutrrc.json
 
 # Dependencies
 node_modules
