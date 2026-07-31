@@ -1,8 +1,9 @@
-import laioutrrc from '../laioutrrc.json';
 import srcModule from '../src/module';
+import laioutrrc from '../test/fixtures/seo/laioutrrc.json';
 
-// Disable project secret key for playground
-laioutrrc.laioutr.projectSecretKey = false as any;
+// Disable project secret key for playground. laioutrrc is shared with the test fixture, so build
+// a copy rather than mutating the import in place.
+const rc = { ...laioutrrc, laioutr: { ...laioutrrc.laioutr, projectSecretKey: false as any } };
 
 export default defineNuxtConfig({
   modules: [
@@ -12,7 +13,7 @@ export default defineNuxtConfig({
     '@laioutr-core/devtools',
   ],
   laioutr: {
-    laioutrrc: laioutrrc as any,
+    laioutrrc: rc as any,
   },
   devtools: { enabled: true },
   compatibilityDate: '2025-09-11',
