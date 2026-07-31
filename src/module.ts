@@ -31,7 +31,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     const options = resolveOptions(rawOptions);
     const laioutrrc = (nuxt.options as any).laioutr?.laioutrrc ?? {};
-    const derived = toUpstreamConfig({ laioutrrc, options, env: process.env });
+    const derived = toUpstreamConfig({ laioutrrc, options, env: process.env, dev: nuxt.options.dev });
 
     nuxt.options.runtimeConfig[MODULE_NAME] = defu(nuxt.options.runtimeConfig[MODULE_NAME], {
       ...options,

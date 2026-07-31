@@ -49,8 +49,10 @@ const laioutrrc = {
   apps: [],
 };
 
-const build = (overrides = {}, env: NodeJS.ProcessEnv = {}) =>
-  toUpstreamConfig({ laioutrrc: laioutrrc as never, options: resolveOptions(overrides), env });
+// `dev` defaults to false so the shape under test is the one a deployment gets; the two cases that
+// care about the difference pass it explicitly.
+const build = (overrides = {}, env: NodeJS.ProcessEnv = {}, dev = false) =>
+  toUpstreamConfig({ laioutrrc: laioutrrc as never, options: resolveOptions(overrides), env, dev });
 
 beforeEach(() => __resetSitemapNames());
 
@@ -100,6 +102,7 @@ describe('toUpstreamConfig — site', () => {
       laioutrrc: rcWithWww as never,
       options: resolveOptions({}),
       env: {},
+      dev: false,
     }).site.multiTenancy.find((candidate) => candidate.hosts.includes('www.shop.ch'));
     expect(wwwEntry).toBeDefined();
     expect(wwwEntry!.hosts).toContain('shop-ch.local.laioutr.tech');
@@ -200,6 +203,18 @@ describe('toUpstreamConfig — sources', () => {
 
   it('disables the module output cache because its key is not host-aware', () => {
     expect(build().sitemap.cacheMaxAgeSeconds).toBe(0);
+  });
+
+  it('leaves the XSL stylesheet to the upstream default under nuxt dev', () => {
+    // Absent rather than set: @nuxtjs/sitemap's own default is the value we want here, and `derived`
+    // is the lowest-precedence layer in applyUpstreamConfig, so saying nothing is how it survives.
+    expect(build({}, {}, true).sitemap).not.toHaveProperty('xsl');
+  });
+
+  it('disables the XSL stylesheet on a built deployment', () => {
+    // The stylesheet renders a sitemap for a human; a deployed one is read by crawlers, which ignore
+    // it. `false` also stops the module registering the /__sitemap__/style.xsl route at all.
+    expect(build({}, {}, false).sitemap.xsl).toBe(false);
   });
 });
 

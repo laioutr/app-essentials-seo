@@ -69,6 +69,21 @@ describe('sitemap and robots', async () => {
       expect(latest).toBe(24_999);
     }, 60_000);
 
+    // `setup()` above passes no `dev: true`, so @nuxt/test-utils builds in production mode — these
+    // two assert the real deployed output rather than that a flag reached the config.
+    it('emits no XSL stylesheet on a built deployment', async () => {
+      const index = await onHost('/sitemap_index.xml', 'shop.ch');
+      const child = await onHost('/__sitemap__/test-product-de.xml', 'shop.ch');
+      // Anchor both documents first: `not.toContain` would pass just as happily on an error page or
+      // an empty body, which is the way this assertion could rot without anyone noticing.
+      expect(index).toContain('<sitemapindex');
+      expect(child).toContain('<urlset');
+      // The index and the child sitemaps are built by separate code paths upstream, each with its own
+      // stylesheet emission, so one `xsl: false` has to cover both.
+      expect(index).not.toContain('xml-stylesheet');
+      expect(child).not.toContain('xml-stylesheet');
+    });
+
     it('never emits an unfilled or collapsed path', async () => {
       const xml = await onHost('/__sitemap__/test-product-de.xml', 'shop.ch');
       expect(xml).not.toContain('//</loc>');

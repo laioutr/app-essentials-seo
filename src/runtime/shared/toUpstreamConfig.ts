@@ -59,8 +59,18 @@ const nonBlank = (value: string | undefined): string | undefined => (value !== u
 const resolveEnv = (options: ResolvedOptions, env: NodeJS.ProcessEnv): string =>
   options.environment ?? nonBlank(env.NUXT_SITE_ENV) ?? nonBlank(env.NUXT_PUBLIC_SITE_ENV) ?? nonBlank(env.VERCEL_ENV) ?? 'production';
 
-export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: ResolvedOptions; env: NodeJS.ProcessEnv }) => {
-  const { laioutrrc, options, env } = input;
+export const toUpstreamConfig = (input: {
+  laioutrrc: LaioutrRcLike;
+  options: ResolvedOptions;
+  env: NodeJS.ProcessEnv;
+  /**
+   * `nuxt.options.dev`. Deliberately not derived from `resolveEnv` below, which answers a different
+   * question and falls back to 'production' when nothing sets it — a plain local `nuxt dev` resolves
+   * to 'production' there, so keying developer conveniences off it turns them off where they matter.
+   */
+  dev: boolean;
+}) => {
+  const { laioutrrc, options, env, dev } = input;
   const languages = Object.values(laioutrrc.languages ?? {});
   const markets = Object.values(laioutrrc.markets ?? {});
   const pages = Object.values(laioutrrc.pages ?? {});
@@ -150,6 +160,13 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
       // Its key composition is undocumented and one build serves every market's host, so a
       // non-host-keyed entry could serve one host's URLs on another.
       cacheMaxAgeSeconds: 0,
+      // The XSL stylesheet renders a sitemap readably in a browser, which is worth having while
+      // developing and nothing but a shipped convenience once deployed — crawlers ignore it. Left
+      // unset under dev so the upstream default applies; `false` elsewhere suppresses the
+      // <?xml-stylesheet?> instruction on both the index and the child sitemaps, and stops the
+      // /__sitemap__/style.xsl route being registered. A project that wants it back can still set
+      // `sitemap.xsl` in app config, which outranks this.
+      ...(dev ? {} : { xsl: false as const }),
       defaults: {
         ...(options.sitemap.defaultChangefreq ? { changefreq: options.sitemap.defaultChangefreq } : {}),
         ...(options.sitemap.defaultPriority === undefined ? {} : { priority: options.sitemap.defaultPriority }),
