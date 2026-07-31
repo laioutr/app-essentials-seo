@@ -71,7 +71,7 @@ app config key, since Cockpit only permits app configuration under the package n
 | `pageType` | `string` | yes | The page type token, e.g. `ecommerce/product-detail-page`. |
 | `priority` | `number` (0–1) | no | |
 | `changefreq` | same enum as `defaultChangefreq` | no | |
-| `include` | `boolean` | no | Set `false` to drop pages of this type from the sitemap. Only affects **configured** pages — it has no effect on a page-index-backed source; use `excludePageTypes` to drop those instead. |
+| `include` | `boolean` | no | Set `false` to drop pages of this type from the sitemap, on both source kinds. A configured page of this type is left out of its sitemap; a page-index-backed source is never enumerated and emits an empty sitemap, still listed in the index. Use `excludePageTypes` to drop the child sitemap from the index too. |
 
 ### `robots`
 

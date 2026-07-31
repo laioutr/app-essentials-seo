@@ -145,6 +145,13 @@ export default defineNitroPlugin((nitro) => {
       return;
     }
 
+    // `include: false` means the same thing on both source kinds — this page type stays out of the
+    // sitemap. Answered before any upstream work: an excluded source has nothing to enumerate.
+    if (pageTypeSeo[parsed.token]?.include === false) {
+      emit([]);
+      return;
+    }
+
     const template = templateFor(parsed.token);
     if (!template) {
       warnOnce(ctx.sitemapName, `no configured page carries a route for "${parsed.token}" — emitting an empty sitemap`);

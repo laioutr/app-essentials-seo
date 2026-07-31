@@ -5,7 +5,11 @@ export default defineNuxtConfig({
   modules: [SeoModule, '@laioutr-core/frontend-core'],
   laioutr: { laioutrrc: laioutrrc as any },
   '@laioutr/app-essentials-seo': {
-    sitemap: { rebuildBatchSize: 10_000, excludePageTypes: [] },
+    sitemap: {
+      rebuildBatchSize: 10_000,
+      excludePageTypes: [],
+      pageTypes: [{ pageType: 'test/hidden', include: false }],
+    },
   },
   compatibilityDate: '2025-09-11',
 });
