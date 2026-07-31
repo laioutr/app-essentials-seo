@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { resolveOptions } from '../../src/types';
 import { __resetSitemapNames } from '../../src/runtime/shared/sitemapName';
 import { toUpstreamConfig } from '../../src/runtime/shared/toUpstreamConfig';
+import { resolveOptions } from '../../src/types';
 
 const laioutrrc = {
   config: { trailingSlash: false },

@@ -1,19 +1,23 @@
-import { defineNitroPlugin, listPages, listPagesFrom, useRuntimeConfig, useUserlandCache } from '#imports';
 import { getRequestHost, setHeader } from 'h3';
-import { i18nConfig } from '#laioutr/i18n-config';
-import { rcProject } from '#laioutr/rc';
-import { CONFIGURED_PAGES_TOKEN, buildSitemapName, parseSitemapName } from '../../shared/sitemapName';
-import { resolveHostContext } from '../lib/hostContext';
-import { buildConfiguredPageUrls } from '../lib/configuredPageUrls';
-import { mapPageIndexEntries } from '../lib/pageIndexUrls';
-import { createSnapshotStore, snapshotState, type Snapshot } from '../lib/snapshotStore';
-import { runRebuildPass } from '../lib/rebuild';
-import { isDynamicPath } from '../../shared/pageSelection';
+import { defineNitroPlugin, listPages, listPagesFrom, useRuntimeConfig, useUserlandCache } from '#imports';
+import type { ResolvedOptions } from '../../../types';
+import type { SitemapSourceDescriptor } from '../../shared/toUpstreamConfig';
 import type { SitemapUrl } from '../lib/alternates';
 import type { PageTypeToken } from '@laioutr-core/core-types/frontend';
 import type { PageIndexEntry } from '@laioutr-core/core-types/orchestr';
-import type { ResolvedOptions } from '../../../types';
-import type { SitemapSourceDescriptor } from '../../shared/toUpstreamConfig';
+import { isDynamicPath } from '../../shared/pageSelection';
+import { buildSitemapName, CONFIGURED_PAGES_TOKEN, parseSitemapName } from '../../shared/sitemapName';
+import { buildConfiguredPageUrls } from '../lib/configuredPageUrls';
+import { resolveHostContext } from '../lib/hostContext';
+import { mapPageIndexEntries } from '../lib/pageIndexUrls';
+import { runRebuildPass } from '../lib/rebuild';
+import { createSnapshotStore, type Snapshot, snapshotState } from '../lib/snapshotStore';
+// #laioutr/i18n-config and #laioutr/rc are virtual Nitro aliases that exist only at build time;
+// their ambient declarations live in ../types/rc.d.ts, which import-x cannot see.
+// eslint-disable-next-line import-x/no-unresolved
+import { i18nConfig } from '#laioutr/i18n-config';
+// eslint-disable-next-line import-x/no-unresolved
+import { rcProject } from '#laioutr/rc';
 
 const MODULE_NAME = '@laioutr/app-essentials-seo';
 const CACHE_CONTROL = 'public, max-age=600, s-maxage=86400, stale-while-revalidate=604800';

@@ -1,5 +1,5 @@
-import type { ClientEnv } from '@laioutr-core/orchestr/types';
 import type { RenderI18nConfig, RenderMarket, RenderMarketDomain } from '@laioutr-core/core-types/rc';
+import type { ClientEnv } from '@laioutr-core/orchestr/types';
 
 export interface HostContext {
   market: RenderMarket;

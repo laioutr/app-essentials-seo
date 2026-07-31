@@ -1,5 +1,5 @@
-import { CONFIGURED_PAGES_TOKEN, buildSitemapName } from './sitemapName';
 import { isDynamicPath } from './pageSelection';
+import { buildSitemapName, CONFIGURED_PAGES_TOKEN } from './sitemapName';
 import type { ResolvedOptions } from '../../types';
 
 /** Chunk size for a single child sitemap. The protocol caps a sitemap file at 50 000 URLs. */
@@ -155,7 +155,7 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
       cacheMaxAgeSeconds: 0,
       defaults: {
         ...(options.sitemap.defaultChangefreq ? { changefreq: options.sitemap.defaultChangefreq } : {}),
-        ...(options.sitemap.defaultPriority !== undefined ? { priority: options.sitemap.defaultPriority } : {}),
+        ...(options.sitemap.defaultPriority === undefined ? {} : { priority: options.sitemap.defaultPriority }),
       },
     },
     robots: {

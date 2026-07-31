@@ -12,7 +12,7 @@ const fakeStream = (entries: any[], endCursor: string | undefined) => {
     get endCursor() {
       return consumed ? endCursor : undefined;
     },
-    [Symbol.asyncIterator]: async function* () {
+    async *[Symbol.asyncIterator] () {
       yield* entries;
     },
   };
@@ -24,7 +24,7 @@ const rejectingStream = (message: string) => ({
     throw new Error(message);
   },
   endCursor: undefined,
-  [Symbol.asyncIterator]: async function* () {},
+  async *[Symbol.asyncIterator] () {},
 });
 
 const entry = (slug: string) => ({ params: { slug }, meta: {} });
@@ -74,7 +74,7 @@ describe('runRebuildPass', () => {
         throw new Error('upstream exploded');
       },
       endCursor: undefined,
-      [Symbol.asyncIterator]: async function* () {},
+      async *[Symbol.asyncIterator] () {},
     });
     const next = await runRebuildPass({ ...base, previous, listPagesFrom: listPagesFrom as never });
     expect(next.resumeFrom).toBe('cursor-1');
@@ -87,7 +87,7 @@ describe('runRebuildPass', () => {
   // generator. These three tests replace the brief's single synchronous-throw case.
 
   it('falls back to listPages when the stream rejects because the handler ignores startCursor', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const listPagesFrom = vi.fn(() => rejectingStream(NON_RESUMABLE_MESSAGE));
     const fallback = vi.fn(() => fakeStream([entry('a')], undefined));
     const next = await runRebuildPass({ ...base, previous: null, listPagesFrom: listPagesFrom as never, listPages: fallback });
@@ -99,7 +99,7 @@ describe('runRebuildPass', () => {
   });
 
   it('does not fall back and keeps the previous resume point when the stream rejects for an unrelated reason', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
     const listPagesFrom = vi.fn(() => rejectingStream('upstream exploded'));
     const fallback = vi.fn(() => fakeStream([entry('z')], undefined));
@@ -112,7 +112,7 @@ describe('runRebuildPass', () => {
   });
 
   it('reaches the fallback when listPagesFrom itself throws synchronously for the same reason', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const listPagesFrom = () => {
       throw new Error(NON_RESUMABLE_MESSAGE);
     };
@@ -125,16 +125,18 @@ describe('runRebuildPass', () => {
   });
 
   it('returns a snapshot instead of rejecting when the stream rejects with null', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
     const listPagesFrom = () => ({
       toArray: async () => {
         // A dependency's async chain can reject with anything, not just an Error — this is the case
-        // that reading `.message` off an un-narrowed cast gets wrong.
+        // that reading `.message` off an un-narrowed cast gets wrong. The literal throw is the point:
+        // rewriting it to `throw new Error(...)` would delete coverage for that fix.
+        // eslint-disable-next-line no-throw-literal
         throw null;
       },
       endCursor: undefined,
-      [Symbol.asyncIterator]: async function* () {},
+      async *[Symbol.asyncIterator] () {},
     });
     const next = await runRebuildPass({ ...base, previous, listPagesFrom: listPagesFrom as never });
     expect(next.resumeFrom).toBe('cursor-1');

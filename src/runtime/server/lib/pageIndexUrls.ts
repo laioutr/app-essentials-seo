@@ -1,8 +1,8 @@
-import { composePath, fillParams, hasUnfilledParams, missingParams, unlocalize } from '../../shared/path';
 import type { SitemapUrl } from './alternates';
 import type { PageTypeSeo } from './configuredPageUrls';
-import type { RenderMarketDomain } from '@laioutr-core/core-types/rc';
 import type { PageIndexEntry } from '@laioutr-core/core-types/orchestr';
+import type { RenderMarketDomain } from '@laioutr-core/core-types/rc';
+import { composePath, fillParams, hasUnfilledParams, missingParams, unlocalize } from '../../shared/path';
 
 export type { SitemapUrl } from './alternates';
 
@@ -40,7 +40,7 @@ export const mapPageIndexEntries = (input: {
     urls.push({
       loc: composePath(domain.path ?? '', filled, trailingSlash),
       ...(entry.meta.lastModified ? { lastmod: entry.meta.lastModified } : {}),
-      ...(seo.priority !== undefined ? { priority: seo.priority } : {}),
+      ...(seo.priority === undefined ? {} : { priority: seo.priority }),
       ...(seo.changefreq ? { changefreq: seo.changefreq } : {}),
       ...(includeImages && entry.meta.previewImage ? { images: [{ loc: entry.meta.previewImage }] } : {}),
     });

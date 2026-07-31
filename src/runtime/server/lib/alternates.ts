@@ -1,5 +1,5 @@
-import { composePath, fillParams, unlocalize } from '../../shared/path';
 import type { RenderMarket } from '@laioutr-core/core-types/rc';
+import { composePath, fillParams, unlocalize } from '../../shared/path';
 
 export interface SitemapUrl {
   loc: string;

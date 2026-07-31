@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { CONFIGURED_PAGES_TOKEN, buildSitemapName, parseSitemapName } from '../../src/runtime/shared/sitemapName';
+import { buildSitemapName, CONFIGURED_PAGES_TOKEN, parseSitemapName } from '../../src/runtime/shared/sitemapName';
 
 beforeAll(() => {
   buildSitemapName('ecommerce/product-detail-page', 'de');

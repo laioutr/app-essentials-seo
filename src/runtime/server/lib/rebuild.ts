@@ -1,5 +1,5 @@
 import { dedupeByLoc } from './pageIndexUrls';
-import { stamp, type Snapshot } from './snapshotStore';
+import { type Snapshot, stamp } from './snapshotStore';
 import type { SitemapUrl } from './alternates';
 
 interface EntryStreamLike {
@@ -49,14 +49,14 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
   const keep = (complete: boolean, resumeFrom: string | undefined): Snapshot => ({
     urls,
     complete,
-    ...(resumeFrom !== undefined ? { resumeFrom } : {}),
+    ...(resumeFrom === undefined ? {} : { resumeFrom }),
     ...stamp(complete, now),
   });
 
   // A page type whose handler ignores startCursor cannot be resumed at all, so one bounded read via
   // listPages is the best this pass can offer until the handler threads the cursor through.
   const runNonResumableFallback = async (error: unknown): Promise<Snapshot> => {
-    console.error(
+    console.warn(
       `[@laioutr/app-essentials-seo] ${label ?? 'page type'} cannot be resumed because its pageIndex list handler ignores startCursor. ` +
         `Its sitemap is capped at ${take} URLs. Return \`paginate(fn, startCursor)\` from the handler to fix it. ` +
         `Original error: ${messageOf(error)}`
@@ -65,7 +65,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
     try {
       urls.push(...dedupeByLoc(mapEntries(await listPages({ take }).toArray()), seen));
     } catch (fallbackError) {
-      console.error(`[@laioutr/app-essentials-seo] fallback enumeration failed: ${messageOf(fallbackError)}`);
+      console.warn(`[@laioutr/app-essentials-seo] fallback enumeration failed: ${messageOf(fallbackError)}`);
     }
     return keep(true, undefined);
   };
@@ -85,7 +85,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
     entries = await stream.toArray();
   } catch (error) {
     if (isNonResumable(error)) return runNonResumableFallback(error);
-    console.error(
+    console.warn(
       `[@laioutr/app-essentials-seo] enumeration pass failed for ${label ?? 'a page type'}; keeping the last resume point. ` +
         `Original error: ${messageOf(error)}`
     );

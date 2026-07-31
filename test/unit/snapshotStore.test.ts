@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { COMPLETE_TTL_MS, INCOMPLETE_TTL_MS, createSnapshotStore, snapshotState, stamp } from '../../src/runtime/server/lib/snapshotStore';
+import { COMPLETE_TTL_MS, createSnapshotStore, INCOMPLETE_TTL_MS, snapshotState, stamp } from '../../src/runtime/server/lib/snapshotStore';
 
 const memoryStorage = () => {
   const map = new Map<string, unknown>();
   return {
     getItem: async (key: string) => map.get(key) ?? null,
-    setItem: async (key: string, value: unknown) => void map.set(key, value),
-    removeItem: async (key: string) => void map.delete(key),
+    setItem: async (key: string, value: unknown) => {
+      map.set(key, value);
+    },
+    removeItem: async (key: string) => {
+      map.delete(key);
+    },
     _map: map,
   };
 };

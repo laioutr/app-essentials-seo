@@ -1,7 +1,7 @@
+import type { SitemapUrl } from '../server/lib/alternates';
 import type { PageIndexEntry } from '@laioutr-core/core-types/orchestr';
 import type { RenderMarket, RenderMarketDomain } from '@laioutr-core/core-types/rc';
 import type { H3Event } from 'h3';
-import type { SitemapUrl } from '../server/lib/alternates';
 
 export interface SitemapSourceResolveContext {
   event: H3Event;

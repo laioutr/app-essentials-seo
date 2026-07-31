@@ -1,7 +1,7 @@
 import { buildAlternates, type SitemapUrl } from './alternates';
-import { composePath, unlocalize } from '../../shared/path';
-import { isDynamicPath, isPageIncluded } from '../../shared/pageSelection';
 import type { RenderMarket, RenderMarketDomain } from '@laioutr-core/core-types/rc';
+import { isDynamicPath, isPageIncluded } from '../../shared/pageSelection';
+import { composePath, unlocalize } from '../../shared/path';
 
 export interface PageTypeSeo {
   priority?: number;
@@ -44,7 +44,7 @@ export const buildConfiguredPageUrls = (input: {
     urls.push({
       loc: composePath(domain.path ?? '', path, trailingSlash),
       ...(page.updatedAt ? { lastmod: page.updatedAt } : {}),
-      ...(seo.priority !== undefined ? { priority: seo.priority } : {}),
+      ...(seo.priority === undefined ? {} : { priority: seo.priority }),
       ...(seo.changefreq ? { changefreq: seo.changefreq } : {}),
       alternatives: buildAlternates({
         pagePath: page.path,

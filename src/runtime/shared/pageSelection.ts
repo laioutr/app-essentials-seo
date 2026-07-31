@@ -27,7 +27,7 @@ export const defaultVariant = <T extends { variants: Record<string, SelectablePa
   page: T
 ): SelectablePageVariant | undefined => {
   const variants = Object.values(page.variants);
-  return variants.find((variant) => variant.conditions == null) ?? variants[0];
+  return variants.find((variant) => variant.conditions === undefined || variant.conditions === null) ?? variants[0];
 };
 
 /**

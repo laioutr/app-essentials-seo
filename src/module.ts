@@ -1,10 +1,10 @@
 import { addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
 import { defu } from 'defu';
-import { registerLaioutrApp } from '@laioutr-core/kit';
-import { MODULE_NAME, resolveOptions, RobotsOptionsSchema, SitemapOptionsSchema } from './types';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
-import type { ModuleOptions } from './types';
+import { MODULE_NAME, resolveOptions, RobotsOptionsSchema, SitemapOptionsSchema } from './types';
+import { registerLaioutrApp } from '@laioutr-core/kit';
 import type { DerivedSiteConfig } from './runtime/shared/toUpstreamConfig';
+import type { ModuleOptions } from './types';
 import { version } from '../package.json';
 
 export type { ModuleOptions } from './types';
@@ -59,10 +59,10 @@ export const applyUpstreamConfig = (
 };
 
 /** Reads a `RobotsGroupInput` field that may be a single value or an array, as an array. */
-const asArray = <T>(value: T | T[] | undefined): T[] =>
-  value === undefined ? []
-  : Array.isArray(value) ? value
-  : [value];
+const asArray = <T>(value: T | T[] | undefined): T[] => {
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
+};
 
 export default defineNuxtModule<ModuleOptions>({
   meta: { name: MODULE_NAME, version, configKey: MODULE_NAME },
