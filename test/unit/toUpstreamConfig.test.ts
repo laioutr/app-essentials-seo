@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { __resetSitemapNames } from '../../src/runtime/shared/sitemapName';
 import { toUpstreamConfig } from '../../src/runtime/shared/toUpstreamConfig';
 import { resolveOptions } from '../../src/types';
@@ -128,6 +128,38 @@ describe('toUpstreamConfig — site', () => {
     expect(build().site).not.toHaveProperty('indexable');
     expect(build({ indexable: 'never' }).site.indexable).toBe(false);
     expect(build({ indexable: 'always' }).site.indexable).toBe(true);
+  });
+
+  it('warns when indexable always is forced on a non-production deployment, naming the environment', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(build({ indexable: 'always', environment: 'preview' }).site.indexable).toBe(true);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"preview"'));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('indexable'));
+    warn.mockRestore();
+  });
+
+  it('warns off a non-production environment that only the env variables named', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    build({ indexable: 'always' }, { VERCEL_ENV: 'preview' });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('"preview"'));
+    warn.mockRestore();
+  });
+
+  it('stays silent on the default configuration and on auto in a non-production environment', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    build();
+    build({ indexable: 'auto' }, { VERCEL_ENV: 'preview' });
+    build({ environment: 'staging' });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('stays silent when indexable always lands on a production deployment', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    build({ indexable: 'always' });
+    build({ indexable: 'always', environment: 'production' });
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
 

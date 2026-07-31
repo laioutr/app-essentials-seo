@@ -205,6 +205,11 @@ rather than this module's own sources, reach for their hooks instead:
   `nuxt.config.ts` or via this module's own config — every market emits URLs on that single origin
   instead of each request deriving its own host. This module warns at build time when `site.url` is
   set alongside more than one configured host, but it does not unset it for you.
+- **`indexable: 'always'` outranks `environment`, so it makes a non-production deployment
+  crawlable.** That is what the option is for, and it is left alone — but a staging or preview
+  deployment in the index competes with production for the same content, so this module warns at
+  build time when the two are combined, naming the resolved environment. Reach for `'auto'` unless
+  you specifically want the non-production URLs crawled.
 - **A page type whose page-index registration ignores `startCursor` is capped at
   `rebuildBatchSize` URLs.** Sitemaps for page-index-backed page types are built incrementally,
   resuming from where the previous pass left off. Resumption depends on the registration's list

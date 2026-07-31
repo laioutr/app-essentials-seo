@@ -118,14 +118,27 @@ export const toUpstreamConfig = (input: { laioutrrc: LaioutrRcLike; options: Res
     };
   });
 
+  const resolvedEnv = resolveEnv(options, env);
+
   const site: DerivedSiteConfig = {
-    env: resolveEnv(options, env),
+    env: resolvedEnv,
     trailingSlash: laioutrrc.config?.trailingSlash ?? false,
     multiTenancy,
   };
   if (options.siteName) site.name = options.siteName;
   // 'auto' leaves it unset so getSiteIndexable falls back to env === 'production'.
   if (options.indexable !== 'auto') site.indexable = options.indexable === 'always';
+
+  // An explicit `indexable` deliberately outranks the environment, so this deployment will be
+  // crawled even though it is not production. Checked against the resolved environment, not the
+  // raw option, so the env-variable fallbacks count too.
+  if (options.indexable === 'always' && resolvedEnv !== 'production') {
+    console.warn(
+      `[@laioutr/app-essentials-seo] indexable is 'always' on a "${resolvedEnv}" deployment, so search engines ` +
+        'will index it. Its URLs can then compete with production for the same content. ' +
+        "Use indexable: 'auto' to let the environment decide, or 'never' to keep this deployment out of search."
+    );
+  }
 
   return {
     site,
