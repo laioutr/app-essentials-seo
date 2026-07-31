@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "config": { "trailingSlash": false },
+  "laioutr": { "projectSecretKey": false },
+  "apps": [],
+  "templates": {},
+  "globalSections": {},
+  "languages": {
+    "lng_en": { "id": "lng_en", "code": "en", "name": "English", "fallbacks": [] },
+    "lng_de": { "id": "lng_de", "code": "de", "name": "German", "fallbacks": [] },
+    "lng_fr": { "id": "lng_fr", "code": "fr", "name": "French", "fallbacks": [] }
+  },
+  "markets": {
+    "mkt_us": {
+      "id": "mkt_us", "slug": "united-states", "name": "United States", "currency": "USD",
+      "regionCodes": ["US"], "defaultDomainId": "dom_us_en", "studio": {},
+      "domains": {
+        "dom_us_en": { "id": "dom_us_en", "host": "shop.example", "languageId": "lng_en" }
+      }
+    },
+    "mkt_eu": {
+      "id": "mkt_eu", "slug": "europe", "name": "Europe", "currency": "EUR",
+      "regionCodes": ["DE", "FR"], "defaultDomainId": "dom_eu_de", "studio": {},
+      "domains": {
+        "dom_eu_de": { "id": "dom_eu_de", "host": "shop.eu.example", "languageId": "lng_de" },
+        "dom_eu_fr": { "id": "dom_eu_fr", "host": "shop.eu.example", "path": "/fr", "languageId": "lng_fr" }
+      }
+    }
+  },
+  "pages": {
+    "p_home": {
+      "id": "p_home", "type": "core/home", "path": "/", "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "p_about": {
+      "id": "p_about", "type": "core/landingpage", "path": "/about", "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "p_preview": {
+      "id": "p_preview", "type": "core/landingpage", "path": "/preview", "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {}, "robots": "noindex, follow" }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "p_product": {
+      "id": "p_product", "type": "demo/product", "path": { "en": "/products/:slug", "de": "/produkte/:slug", "fr": "/produits/:slug" }, "queries": {},
+      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  }
+}

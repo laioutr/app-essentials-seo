@@ -3,6 +3,9 @@ laioutrrc.json
 # The bare rule above protects real project secrets wherever they land; test fixtures are synthetic
 # and must be committed, or a fresh clone/CI silently loses them.
 !test/fixtures/**/laioutrrc.json
+# Same reasoning for the playground's own rc: synthetic demo data, no secrets, must be committed for
+# `dev:prepare` to work on a fresh clone or in CI.
+!playground/fixtures/laioutrrc.json
 
 # Dependencies
 node_modules
