@@ -106,8 +106,18 @@ export default defineNitroPlugin((nitro) => {
     }
     const { market, domain, clientEnv } = hostContext;
 
-    const emit = async (urls: SitemapUrl[], entries: readonly (PageIndexEntry | Record<string, unknown>)[]) => {
-      await nitro.hooks.callHook('essentials-seo:sitemap-source:resolve', {
+    const emit = (urls: SitemapUrl[]) => {
+      ctx.sources.push({ context: { name: MODULE_NAME }, urls: urls.filter(Boolean) });
+    };
+
+    /**
+     * The hook fires whenever a source is built, with the entries that built it — so `entries` is
+     * never handed out empty for a source that had any. The two cases that do not build anything do
+     * not fire it: a cached read serves a snapshot that was already offered to the hook, pass by
+     * pass, as it was accumulated, and a source with no route template was never built at all.
+     */
+    const announceBuild = (urls: SitemapUrl[], entries: readonly (PageIndexEntry | Record<string, unknown>)[]) =>
+      nitro.hooks.callHook('essentials-seo:sitemap-source:resolve', {
         event: ctx.event,
         token: parsed.token,
         locale: parsed.locale,
@@ -116,8 +126,6 @@ export default defineNitroPlugin((nitro) => {
         entries,
         urls,
       });
-      ctx.sources.push({ context: { name: MODULE_NAME }, urls: urls.filter(Boolean) });
-    };
 
     // Configured pages are finite and need no upstream calls, so they are always built in full.
     if (parsed.token === null) {
@@ -132,14 +140,15 @@ export default defineNitroPlugin((nitro) => {
       });
       // Configured pages are handed to the extension hook as the loose `Record<string, unknown>` arm
       // of its `entries` union — they are RC page objects, not enumerated page-index entries.
-      await emit(urls, Object.values(rcProject.pages ?? {}) as unknown as Record<string, unknown>[]);
+      await announceBuild(urls, Object.values(rcProject.pages ?? {}) as unknown as Record<string, unknown>[]);
+      emit(urls);
       return;
     }
 
     const template = templateFor(parsed.token);
     if (!template) {
       warnOnce(ctx.sitemapName, `no configured page carries a route for "${parsed.token}" — emitting an empty sitemap`);
-      await emit([], []);
+      emit([]);
       return;
     }
 
@@ -160,6 +169,7 @@ export default defineNitroPlugin((nitro) => {
         now: Date.now(),
         take: options.sitemap.rebuildBatchSize,
         mapEntries,
+        onPassBuilt: announceBuild,
         label: `${parsed.token} (${parsed.locale})`,
         listPagesFrom: ({ take, resumeFrom }) => listPagesFrom(token, { clientEnv, event: ctx.event, take, resumeFrom }),
         listPages: ({ take }) => listPages(token, { clientEnv, event: ctx.event, take }),
@@ -171,7 +181,7 @@ export default defineNitroPlugin((nitro) => {
     if (state === 'missing') {
       const next = await pass(null);
       await store.writeLive(host, ctx.sitemapName, next);
-      await emit(next.urls, []);
+      emit(next.urls);
       return;
     }
 
@@ -190,7 +200,7 @@ export default defineNitroPlugin((nitro) => {
       });
     }
 
-    await emit(live!.urls, []);
+    emit(live!.urls);
   });
 
   nitro.hooks.hook('sitemap:index-resolved', (ctx: any) => {

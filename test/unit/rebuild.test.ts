@@ -124,6 +124,84 @@ describe('runRebuildPass', () => {
     warnSpy.mockRestore();
   });
 
+  describe('onPassBuilt', () => {
+    it('offers the urls this pass built together with the entries they were mapped from', async () => {
+      const offered: Array<{ urls: string[]; entries: string[] }> = [];
+      const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
+      await runRebuildPass({
+        ...base,
+        previous,
+        listPagesFrom: () => fakeStream([entry('a'), entry('b'), entry('c')], undefined),
+        onPassBuilt: (urls, entries) => {
+          offered.push({ urls: urls.map((u) => u.loc), entries: entries.map((e) => e.params.slug) });
+        },
+      });
+      // '/p/a' was accumulated by an earlier pass and was offered there; re-offering it would ask the
+      // caller to filter its own output a second time.
+      expect(offered).toEqual([{ urls: ['/p/b', '/p/c'], entries: ['a', 'b', 'c'] }]);
+    });
+
+    it('accumulates what the callback leaves behind', async () => {
+      const next = await runRebuildPass({
+        ...base,
+        previous: null,
+        listPagesFrom: () => fakeStream([entry('a'), entry('b')], undefined),
+        onPassBuilt: async (urls) => {
+          await Promise.resolve();
+          const kept = urls.filter((url) => url.loc === '/p/b');
+          urls.length = 0;
+          urls.push(...kept);
+        },
+      });
+      expect(next.urls.map((u) => u.loc)).toEqual(['/p/b']);
+    });
+
+    it('does not accumulate a hole the callback leaves behind', async () => {
+      const next = await runRebuildPass({
+        ...base,
+        previous: null,
+        listPagesFrom: () => fakeStream([entry('a'), entry('b')], undefined),
+        // A snapshot is read back as the next pass's starting point, which reads `loc` off every URL
+        // in it.
+        onPassBuilt: (urls) => {
+          urls[0] = undefined as never;
+        },
+      });
+      expect(next.urls.map((u) => u.loc)).toEqual(['/p/b']);
+    });
+
+    it('offers the non-resumable fallback build on the same terms', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const offered: string[][] = [];
+      const next = await runRebuildPass({
+        ...base,
+        previous: null,
+        listPagesFrom: (() => rejectingStream(NON_RESUMABLE_MESSAGE)) as never,
+        listPages: () => fakeStream([entry('a'), entry('b')], undefined),
+        onPassBuilt: (urls) => {
+          offered.push(urls.map((u) => u.loc));
+          urls.pop();
+        },
+      });
+      expect(offered).toEqual([['/p/a', '/p/b']]);
+      expect(next.urls.map((u) => u.loc)).toEqual(['/p/a']);
+      warnSpy.mockRestore();
+    });
+
+    it('is not called at all when the pass fails', async () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const onPassBuilt = vi.fn();
+      await runRebuildPass({
+        ...base,
+        previous: null,
+        listPagesFrom: (() => rejectingStream('upstream exploded')) as never,
+        onPassBuilt,
+      });
+      expect(onPassBuilt).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+  });
+
   it('returns a snapshot instead of rejecting when the stream rejects with null', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };

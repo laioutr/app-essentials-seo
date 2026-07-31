@@ -114,10 +114,21 @@ export default defineNuxtConfig({
 
 ## The extension hook
 
-This module fires a Nitro server hook, `essentials-seo:sitemap-source:resolve`, while it builds each
-sitemap source. Another app in the project can hook into it to filter or enrich the URLs before
-they're written into the response — for example, to drop out-of-stock products from the crawlable
-set.
+This module fires a Nitro server hook, `essentials-seo:sitemap-source:resolve`, whenever it builds a
+sitemap source — with the entries that built it. Another app in the project can hook into it to
+filter or enrich the URLs before they're stored and served — for example, to drop out-of-stock
+products from the crawlable set.
+
+When it fires depends on how the source is built:
+
+- **Configured pages** are finite, so that source is rebuilt in full on every request and the hook
+  fires every time.
+- **A page-index-backed source** is accumulated over one or more rebuild passes (see "Operational
+  notes"), and the hook fires once per pass, carrying only the URLs that pass added. Whatever it
+  leaves behind is what lands in the snapshot, so a filter applied here survives into every later
+  request served from that snapshot.
+- **A request answered from the snapshot cache does not fire it** — there is nothing new to filter,
+  and re-offering an already-filtered snapshot would mean applying the filter twice.
 
 The payload carries:
 
@@ -127,15 +138,18 @@ The payload carries:
   pages).
 - `locale`, `market`, `domain` — the locale and resolved market/domain this source is being built
   for.
-- `urls` — the URLs collected for this source so far. **Mutate this array in place** — reassigning it
-  to a new array is not observed by the caller. The hook fires **once per rebuild pass, not once per
-  URL** — expect to filter or map the whole array in one call, not to be invoked per entry.
-- `entries` — the raw entries enumerated for this source, given as context for filtering decisions.
+- `urls` — the URLs this build produced. **Mutate this array in place** — reassigning it to a new
+  array is not observed by the caller. It holds **one whole pass, not one URL** — expect to filter or
+  map the array in one call, not to be invoked per entry — and never the URLs earlier passes already
+  contributed, which were offered in the pass that built them.
+- `entries` — the raw entries `urls` was built from, given as context for filtering decisions: this
+  pass's enumerated page-index entries, or every configured page on the configured-pages source.
   **Not positionally aligned with `urls`**: entries dropped along the way (flagged `noindex`,
   missing required params, or otherwise unfillable) never reach `urls`, so `entries` is a superset.
-  Do not zip the two arrays together by index — match on URL content instead.
+  Do not zip the two arrays together by index — match on entry identity instead.
 
-A worked example:
+A worked example. `entries` is what makes this possible: a page-index entry carries the identity
+(`subject`, `params`) the decision needs, while a URL only carries its `loc`.
 
 ```ts
 // server/plugins/filterOutOfStockProducts.ts
@@ -144,10 +158,17 @@ export default defineNitroPlugin((nitro) => {
     // Only touch the product-detail-page source; leave every other source untouched.
     if (ctx.token !== 'ecommerce/product-detail-page') return;
 
-    const outOfStockSlugs = await getOutOfStockSlugs(ctx.market.id);
+    // Ask stock about exactly the products this pass built, not the whole catalogue.
+    const entries = ctx.entries as PageIndexEntry[];
+    const outOfStock = await getOutOfStockIds(ctx.market.id, entries.map((entry) => entry.subject?.id));
+    const droppedSlugs = new Set(entries.filter((entry) => outOfStock.has(entry.subject?.id)).map((entry) => entry.params.slug));
+
+    // The slug is the one part of an entry that reaches the URL, so it is what links a URL back to
+    // the entry it came from. A trailing slash is stripped first, so both settings match.
+    const slugOf = (loc: string) => loc.replace(/\/$/, '').split('/').pop();
 
     // `urls` must be mutated in place.
-    const kept = ctx.urls.filter((url) => !outOfStockSlugs.some((slug) => url.loc.includes(slug)));
+    const kept = ctx.urls.filter((url) => !droppedSlugs.has(slugOf(url.loc)));
     ctx.urls.length = 0;
     ctx.urls.push(...kept);
   });

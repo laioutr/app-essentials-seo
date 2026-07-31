@@ -12,6 +12,13 @@ export interface RebuildPassInput {
   now: number;
   take: number;
   mapEntries: (entries: any[]) => SitemapUrl[];
+  /**
+   * Offered the URLs this pass just built, together with the entries they were mapped from, before
+   * they are accumulated — so whatever it leaves in the array is what the snapshot persists. It sees
+   * only what this pass added: URLs carried over from earlier passes were offered in the pass that
+   * built them and are never replayed.
+   */
+  onPassBuilt?: (urls: SitemapUrl[], entries: any[]) => void | Promise<void>;
   /** Injected `listPagesFrom`. Its stream rejects when the registration ignores `startCursor`. */
   listPagesFrom: (options: { take: number; resumeFrom: string | undefined }) => EntryStreamLike;
   /** Injected `listPages`, used only for the non-resumable fallback. */
@@ -42,9 +49,20 @@ const messageOf = (error: unknown): string => (error instanceof Error ? error.me
  * the snapshot complete, after running the non-resumable fallback once.
  */
 export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot> => {
-  const { previous, now, take, mapEntries, listPagesFrom, listPages, label } = input;
+  const { previous, now, take, mapEntries, onPassBuilt, listPagesFrom, listPages, label } = input;
   const urls = previous ? [...previous.urls] : [];
   const seen = new Set(urls.map((url) => url.loc));
+
+  /**
+   * Maps one pass's entries, offers what it built for filtering, then accumulates the survivors.
+   * Holes are dropped rather than stored: an accumulated snapshot is read back as the starting point
+   * of the next pass, which would throw reading `loc` off one.
+   */
+  const accumulate = async (passEntries: any[]): Promise<void> => {
+    const built = dedupeByLoc(mapEntries(passEntries), seen);
+    await onPassBuilt?.(built, passEntries);
+    urls.push(...built.filter(Boolean));
+  };
 
   const keep = (complete: boolean, resumeFrom: string | undefined): Snapshot => ({
     urls,
@@ -62,11 +80,16 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
         `Original error: ${messageOf(error)}`
     );
     if (!listPages) return keep(true, undefined);
+    let fallbackEntries: any[];
     try {
-      urls.push(...dedupeByLoc(mapEntries(await listPages({ take }).toArray()), seen));
+      fallbackEntries = await listPages({ take }).toArray();
     } catch (fallbackError) {
       console.warn(`[@laioutr/app-essentials-seo] fallback enumeration failed: ${messageOf(fallbackError)}`);
+      return keep(true, undefined);
     }
+    // Outside the catch above: this is a capped build like any other, so it owes the caller the same
+    // chance to filter it, and a failure in that filter is not an enumeration failure.
+    await accumulate(fallbackEntries);
     return keep(true, undefined);
   };
 
@@ -92,7 +115,7 @@ export const runRebuildPass = async (input: RebuildPassInput): Promise<Snapshot>
     return keep(false, previous?.resumeFrom);
   }
 
-  urls.push(...dedupeByLoc(mapEntries(entries), seen));
+  await accumulate(entries);
 
   // Read only after one complete consumption: undefined means "start here" going in and "exhausted"
   // coming out.

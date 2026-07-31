@@ -16,8 +16,8 @@ describe('sitemap and robots', async () => {
   // xForwardedHost: true })`, and nuxt-site-config's `getNitroOrigin` (same option) for <loc>/robots
   // absolute URLs and multi-tenancy matching — reads `x-forwarded-host` first, exactly so a reverse
   // proxy (or, here, a test) can carry the intended host through unmodified.
-  const onHost = (path: string, host: string) =>
-    $fetch<string>(path, { headers: { host, 'x-forwarded-host': host, 'x-forwarded-proto': 'https' } });
+  const onHost = <T = string>(path: string, host: string) =>
+    $fetch<T>(path, { headers: { host, 'x-forwarded-host': host, 'x-forwarded-proto': 'https' } });
 
   describe('index filtering', () => {
     it('lists only the locales a host serves', async () => {
@@ -77,6 +77,54 @@ describe('sitemap and robots', async () => {
 
     it('emits no hreflang alternates for enumerated pages', async () => {
       expect(await onHost('/__sitemap__/test-product-de.xml', 'shop.ch')).not.toContain('xhtml:link');
+    });
+  });
+
+  describe('the extension hook', () => {
+    // The fixture registers a hook plugin that keeps only the three "featured" articles, deciding
+    // from `ctx.entries`, and logs every call it receives at /__sitemap-hook-log. Six articles fit in
+    // one rebuild pass, so a source is built once and every request after that is served from its
+    // snapshot — though the build can just as well have been triggered by an earlier test rendering
+    // the sitemap index, which resolves every child source. Hence deltas rather than absolute counts.
+    interface HookCall {
+      token: string | null;
+      locale: string;
+      entries: number;
+      urls: number;
+    }
+    const articleCalls = async (): Promise<HookCall[]> =>
+      (await onHost<HookCall[]>('/__sitemap-hook-log', 'shop.ch')).filter((call) => call.token === 'test/article');
+
+    const featuredLocs = ['https://shop.ch/artikel/a0', 'https://shop.ch/artikel/a2', 'https://shop.ch/artikel/a4'];
+
+    it('hands a page-index source the entries it was built from', async () => {
+      await onHost('/__sitemap__/test-article-de.xml', 'shop.ch');
+
+      const calls = await articleCalls();
+      expect(calls.length).toBeGreaterThan(0);
+      // Six entries mapped to five URLs — one article is noindex — so every build saw the superset
+      // the payload documents, and emphatically not an empty array.
+      for (const call of calls) expect(call).toMatchObject({ entries: 6, urls: 5 });
+    });
+
+    it('serves what the hook left in urls', async () => {
+      const xml = await onHost('/__sitemap__/test-article-de.xml', 'shop.ch');
+      for (const loc of featuredLocs) expect(xml).toContain(`<loc>${loc}</loc>`);
+      expect(xml).not.toContain('/artikel/a1');
+      expect(xml).not.toContain('/artikel/a5');
+    });
+
+    it('keeps the filter on a cached request without firing the hook again', async () => {
+      const before = (await articleCalls()).length;
+
+      const xml = await onHost('/__sitemap__/test-article-de.xml', 'shop.ch');
+      for (const loc of featuredLocs) expect(xml).toContain(`<loc>${loc}</loc>`);
+      expect(xml).not.toContain('/artikel/a1');
+
+      // The snapshot was filtered in the pass that built it, so a cached read has nothing left to
+      // offer — firing again would hand out an empty `entries` and re-run the filter over its own
+      // output.
+      expect(await articleCalls()).toHaveLength(before);
     });
   });
 
