@@ -45,7 +45,6 @@
     "zod": "3.25.61"
   },
   "devDependencies": {
-    "@laioutr-app/ui": "^2.8.3",
     "@laioutr-core/devtools": "^0.38.1",
     "@laioutr-core/orchestr": "^0.38.1",
     "@laioutr/eslint-config": "^1.8.8",
