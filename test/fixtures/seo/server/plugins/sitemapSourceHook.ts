@@ -11,7 +11,7 @@ import { sitemapHookLog } from '../utils/sitemapHookLog';
  * the hook was handed and how often it fired.
  */
 export default defineNitroPlugin((nitro: any) => {
-  nitro.hooks.hook('essentials-seo:sitemap-source:resolve', (ctx: any) => {
+  nitro.hooks.hook('essentials-seo:sitemap-source:built', (ctx: any) => {
     sitemapHookLog.push({ token: ctx.token, locale: ctx.locale, entries: ctx.entries.length, urls: ctx.urls.length });
     if (ctx.token !== 'test/article') return;
 

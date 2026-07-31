@@ -117,7 +117,7 @@ export default defineNitroPlugin((nitro) => {
      * pass, as it was accumulated, and a source with no route template was never built at all.
      */
     const announceBuild = (urls: SitemapUrl[], entries: readonly (PageIndexEntry | Record<string, unknown>)[]) =>
-      nitro.hooks.callHook('essentials-seo:sitemap-source:resolve', {
+      nitro.hooks.callHook('essentials-seo:sitemap-source:built', {
         event: ctx.event,
         token: parsed.token,
         locale: parsed.locale,

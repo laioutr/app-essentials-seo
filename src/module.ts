@@ -9,7 +9,7 @@ import { version } from '../package.json';
 
 export type { ModuleOptions } from './types';
 // This file is the package entry, so these re-exports are what let a consumer name the payload of
-// `essentials-seo:sitemap-source:resolve`. The `nitropack` augmentation types that payload inline,
+// `essentials-seo:sitemap-source:built`. The `nitropack` augmentation types that payload inline,
 // which covers a handler written in place but not one lifted out into its own named function.
 export type { SitemapUrl } from './runtime/server/lib/alternates';
 export type { SitemapSourceResolveContext } from './runtime/types/sitemapSource';

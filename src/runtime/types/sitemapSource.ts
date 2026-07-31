@@ -4,7 +4,7 @@ import type { RenderMarket, RenderMarketDomain } from '@laioutr-core/core-types/
 import type { H3Event } from 'h3';
 
 /**
- * Payload of `essentials-seo:sitemap-source:resolve`, which fires whenever a sitemap source is built,
+ * Payload of `essentials-seo:sitemap-source:built`, which fires whenever a sitemap source is built,
  * with the entries that built it: once per request for the configured-pages source, which is rebuilt
  * in full every time, and once per rebuild pass for a page-index-backed source. A request answered
  * from the snapshot cache does not fire it — that snapshot was already offered to the hook, pass by

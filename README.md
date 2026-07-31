@@ -115,7 +115,7 @@ export default defineNuxtConfig({
 
 ## The extension hook
 
-This module fires a Nitro server hook, `essentials-seo:sitemap-source:resolve`, whenever it builds a
+This module fires a Nitro server hook, `essentials-seo:sitemap-source:built`, whenever it builds a
 sitemap source — with the entries that built it. Another app in the project can hook into it to
 filter or enrich the URLs before they're stored and served — for example, to drop out-of-stock
 products from the crawlable set.
@@ -155,7 +155,7 @@ A worked example. `entries` is what makes this possible: a page-index entry carr
 ```ts
 // server/plugins/filterOutOfStockProducts.ts
 export default defineNitroPlugin((nitro) => {
-  nitro.hooks.hook('essentials-seo:sitemap-source:resolve', async (ctx) => {
+  nitro.hooks.hook('essentials-seo:sitemap-source:built', async (ctx) => {
     // Only touch the product-detail-page source; leave every other source untouched.
     if (ctx.token !== 'ecommerce/product-detail-page') return;
 
