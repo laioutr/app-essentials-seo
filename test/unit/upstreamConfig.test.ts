@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { applyUpstreamConfig } from '../../src/module';
+import { applyUpstreamConfig } from '../../src/upstreamConfig';
 
 describe('applyUpstreamConfig', () => {
   it('lets app config beat a developer value, and both beat derived', () => {
