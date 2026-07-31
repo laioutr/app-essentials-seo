@@ -1,4 +1,6 @@
 import srcModule from '../src/module';
+// This rc is shared with the integration suite, which asserts against its exact shape
+// (host/locale lists, page counts). Don't edit it for playground purposes.
 import laioutrrc from '../test/fixtures/seo/laioutrrc.json';
 
 // Disable project secret key for playground. laioutrrc is shared with the test fixture, so build

@@ -21,7 +21,9 @@ describe('non-production deployments', async () => {
 
   it('blocks every crawler', () => {
     expect(txt).toContain('User-agent: *');
-    expect(txt).toContain('Disallow: /');
+    // Anchored to a whole line: a plain substring check would also match the scoped
+    // `Disallow: /api/` and `Disallow: /_laioutr/` lines production emits.
+    expect(txt).toMatch(/^Disallow: \/$/m);
   });
 
   it('drops the sitemap reference so nothing is submitted', () => {

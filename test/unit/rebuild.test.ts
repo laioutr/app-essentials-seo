@@ -87,19 +87,19 @@ describe('runRebuildPass', () => {
   // generator. These three tests replace the brief's single synchronous-throw case.
 
   it('falls back to listPages when the stream rejects because the handler ignores startCursor', async () => {
-    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const listPagesFrom = vi.fn(() => rejectingStream(NON_RESUMABLE_MESSAGE));
     const fallback = vi.fn(() => fakeStream([entry('a')], undefined));
     const next = await runRebuildPass({ ...base, previous: null, listPagesFrom: listPagesFrom as never, listPages: fallback });
     expect(fallback).toHaveBeenCalled();
     expect(next.complete).toBe(true);
     expect(next.urls.map((u) => u.loc)).toEqual(['/p/a']);
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('startCursor'));
-    errorSpy.mockRestore();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('startCursor'));
+    warnSpy.mockRestore();
   });
 
   it('does not fall back and keeps the previous resume point when the stream rejects for an unrelated reason', async () => {
-    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
     const listPagesFrom = vi.fn(() => rejectingStream('upstream exploded'));
     const fallback = vi.fn(() => fakeStream([entry('z')], undefined));
@@ -108,11 +108,11 @@ describe('runRebuildPass', () => {
     expect(next.complete).toBe(false);
     expect(next.resumeFrom).toBe('cursor-1');
     expect(next.urls.map((u) => u.loc)).toEqual(['/p/a']);
-    errorSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 
   it('reaches the fallback when listPagesFrom itself throws synchronously for the same reason', async () => {
-    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const listPagesFrom = () => {
       throw new Error(NON_RESUMABLE_MESSAGE);
     };
@@ -120,12 +120,12 @@ describe('runRebuildPass', () => {
     const next = await runRebuildPass({ ...base, previous: null, listPagesFrom: listPagesFrom as never, listPages: fallback });
     expect(fallback).toHaveBeenCalled();
     expect(next.complete).toBe(true);
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('startCursor'));
-    errorSpy.mockRestore();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('startCursor'));
+    warnSpy.mockRestore();
   });
 
   it('returns a snapshot instead of rejecting when the stream rejects with null', async () => {
-    const errorSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const previous = { urls: [{ loc: '/p/a' }], complete: false, resumeFrom: 'cursor-1', expiresAt: 0, refreshAt: 0 };
     const listPagesFrom = () => ({
       toArray: async () => {
@@ -142,6 +142,6 @@ describe('runRebuildPass', () => {
     expect(next.resumeFrom).toBe('cursor-1');
     expect(next.complete).toBe(false);
     expect(next.urls.map((u) => u.loc)).toEqual(['/p/a']);
-    errorSpy.mockRestore();
+    warnSpy.mockRestore();
   });
 });
