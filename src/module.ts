@@ -40,14 +40,14 @@ export default defineNuxtModule<ModuleOptions>({
 
     applyUpstreamConfig(nuxt.options as any, derived, rawOptions as any);
 
-    // @laioutr-core/frontend-core installs @nuxtjs/robots itself, unconditionally, from its own
-    // setup — and Nuxt's installModule dedupes by module name, so whichever of the two modules a
-    // developer lists first in nuxt.config.ts is the one whose setup actually configures robots;
-    // the nuxt.options.robots write above is silently discarded when frontend-core wins that race.
-    // This hook runs once every module's setup has finished, regardless of install order, so it is
-    // what makes our sitemap and disallow entries land no matter who installed robots first. It
-    // must not overwrite the arrays outright — a project's own rules, and any other app's
-    // contributions, live there too.
+    // The nuxt.options.robots write above only reaches @nuxtjs/robots if this module is the first to
+    // install it: installModule dedupes by module name, so whoever installs it first is the one whose
+    // setup reads those options, and every later install is a no-op that silently discards the write.
+    // Anything ahead of this module in `modules[]` can win that race — a project's own @nuxtjs/robots
+    // entry, another app, or a @laioutr-core/frontend-core old enough to still install it itself.
+    // This hook runs once every module's setup has finished, whatever the order, so it is what makes
+    // our sitemap and disallow entries land regardless. It must not overwrite the arrays outright —
+    // a project's own rules, and any other app's contributions, live there too.
     nuxt.hook('robots:config', (config) => {
       for (const sitemapUrl of derived.robots.sitemap) {
         if (!config.sitemap.includes(sitemapUrl)) config.sitemap.push(sitemapUrl);
@@ -87,9 +87,9 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Installed unconditionally: these are this package's own dependencies, not peer modules the
-    // consuming app supplies. @laioutr-core/frontend-core also installs @nuxtjs/robots today; the
-    // robots:config hook registered above is what keeps our config correct regardless of which of
-    // the two wins the install.
+    // consuming app supplies. This app owns robots.txt in a Laioutr frontend, but its peer range
+    // still spans @laioutr-core/frontend-core versions that install @nuxtjs/robots themselves, and a
+    // project can always install it directly — the robots:config hook above covers both.
     await installModule('@nuxtjs/sitemap');
     await installModule('@nuxtjs/robots');
   },
