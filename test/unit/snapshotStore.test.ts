@@ -81,4 +81,13 @@ describe('createSnapshotStore', () => {
     await store.promotePending('shop.ch', 'pages-de');
     expect((await store.readLive('shop.ch', 'pages-de'))?.urls[0].loc).toBe('/old');
   });
+
+  it('keys a live snapshot exactly as the fixture seeding route writes it', async () => {
+    const storage = memoryStorage();
+    const store = createSnapshotStore(storage as never);
+    await store.writeLive('shop.ch', 'test-product-de', { urls: [], complete: true, ...stamp(true, NOW) });
+    // test/fixtures/seo/server/routes/__seed-snapshot.ts builds this string by hand, because the
+    // fixture is a separate app and this module exports no test seam it could import instead.
+    expect([...storage._map.keys()]).toContain('sitemap:v1:shop.ch:test-product-de');
+  });
 });
