@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 /** Package name and Nuxt config key. Cockpit only permits app config under the package name. */
 export const MODULE_NAME = '@laioutr/app-essentials-seo';
@@ -39,8 +39,8 @@ export const ModuleOptionsSchema = z.object({
   siteName: z.string().optional(),
   indexable: z.enum(['auto', 'always', 'never']).default('auto'),
   environment: z.enum(['production', 'staging', 'preview', 'development']).optional(),
-  sitemap: SitemapOptionsSchema.default({}),
-  robots: RobotsOptionsSchema.default({}),
+  sitemap: SitemapOptionsSchema.prefault({}),
+  robots: RobotsOptionsSchema.prefault({}),
 });
 
 export type ModuleOptions = z.input<typeof ModuleOptionsSchema>;
