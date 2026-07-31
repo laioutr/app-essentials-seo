@@ -1,5 +1,6 @@
 import { defineOrchestr, paginate } from '#imports';
 import { definePageTypeToken } from '@laioutr-core/core-types/frontend';
+import { pageIndexControl } from '../utils/pageIndexControl';
 
 const TOTAL = 25_000;
 const BATCH = 250;
@@ -15,6 +16,12 @@ export const TestProductPage = definePageTypeToken('test/product', {
 
 export const fakeList = ({ batchSize, startCursor }: { batchSize: number; startCursor?: string }) =>
   paginate(async ({ cursor }: { cursor: string | undefined }) => {
+    // Fails the way a real connector outage does — from inside the walk, once consumption has
+    // started — rather than by refusing to hand one out, which is the separate non-resumable path.
+    if (pageIndexControl.failPasses > 0) {
+      pageIndexControl.failPasses--;
+      throw new Error('fixture page index is unavailable');
+    }
     const offset = cursor ? Number(cursor) : 0;
     const size = Math.min(batchSize ?? BATCH, TOTAL - offset);
     const entries = Array.from({ length: Math.max(size, 0) }, (_, i) => ({
