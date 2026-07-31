@@ -1,6 +1,6 @@
 {
   "name": "@laioutr/app-essentials-seo",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "SEO essentials for Laioutr frontends — sitemap.xml and robots.txt",
   "repository": "laioutr/app-essentials-seo",
   "license": "MIT",
@@ -45,6 +45,7 @@
     "zod": "3.25.61"
   },
   "devDependencies": {
+    "@laioutr-app/shopify": "^0.22.1",
     "@laioutr-core/devtools": "^0.38.1",
     "@laioutr-core/orchestr": "^0.38.1",
     "@laioutr/eslint-config": "^1.8.8",
