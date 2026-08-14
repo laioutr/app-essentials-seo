@@ -227,8 +227,9 @@ describe('toUpstreamConfig — robots', () => {
     expect(build({ robots: { extraDisallow: ['/secret'] } }).robots.disallow).toEqual(['/api/', '/_laioutr/', '/secret']);
   });
 
-  it('leaves the robots meta tag to frontend-core', () => {
+  it('leaves both per-page robots signals to frontend-core', () => {
     expect(build().robots.metaTag).toBe(false);
+    expect(build().robots.header).toBe(false);
   });
 
   it('hands custom groups to upstream with their AI-preference lines intact', () => {

@@ -190,6 +190,11 @@ export const toUpstreamConfig = (input: {
       blockNonSeoBots: options.robots.blockNonSeoBots,
       // frontend-core's page renderer already writes this tag and force-overrides preview renders.
       metaTag: false,
+      // Both per-page robots signals are frontend-core's, and upstream's are worse at the job: it
+      // knows nothing of a page's Studio settings, so `getPathRobotConfig` falls through to its
+      // default and asserts `index, follow` on a page the renderer is marking `noindex`. The two
+      // only agree because a crawler resolves the pair by taking the more restrictive one.
+      header: false,
     },
     sources,
   };
