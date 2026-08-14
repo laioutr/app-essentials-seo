@@ -45,6 +45,7 @@ export default defineNuxtModule<ModuleOptions>({
     });
 
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
+    addServerPlugin(resolve('./runtime/server/nitro/robots'));
 
     // Installed on the prepare step alone, so `#laioutr/*` and the orchestr server imports this
     // module's runtime resolves against exist when types are generated.

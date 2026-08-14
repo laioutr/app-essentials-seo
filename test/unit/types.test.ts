@@ -15,6 +15,11 @@ describe('resolveOptions', () => {
     expect(resolved.sitemap.includeImages).toBe(true);
     expect(resolved.robots.enabled).toBe(true);
     expect(resolved.robots.extraDisallow).toEqual([]);
+    expect(resolved.robots.localizeRules).toBe(true);
+  });
+
+  it('lets a project turn rule localization off', () => {
+    expect(resolveOptions({ robots: { localizeRules: false } }).robots.localizeRules).toBe(false);
   });
 
   it('keeps caller values and still fills the rest', () => {

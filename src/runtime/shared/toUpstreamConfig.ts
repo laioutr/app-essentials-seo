@@ -9,7 +9,7 @@ const SITEMAP_CHUNK_SIZE = 50_000;
 
 /** Paths that are never useful to a crawler. Kept independent of sitemap exclusions on purpose:
  *  Disallow stops crawling, which stops a `noindex` from ever being read. */
-const INTERNAL_DISALLOW = ['/api/', '/_laioutr/'];
+export const INTERNAL_DISALLOW = ['/api/', '/_laioutr/'];
 
 /**
  * Marks a group this module contributed. `mergeDerivedRobots` reads it to tell whether the

@@ -94,6 +94,9 @@ export const RobotsOptionsSchema = z.object({
   blockNonSeoBots: z.boolean().default(false),
   extraDisallow: z.array(z.string()).default([]),
   customGroups: z.array(RobotsGroupSchema).default([]),
+  /** Repeat each Allow/Disallow rule under the language prefixes the requested host serves, so a
+   *  rule written once covers a market's other languages. See `localizeRobotsTxt`. */
+  localizeRules: z.boolean().default(true),
 });
 
 export const ModuleOptionsSchema = z.object({
