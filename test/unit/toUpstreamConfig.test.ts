@@ -230,4 +230,13 @@ describe('toUpstreamConfig — robots', () => {
   it('leaves the robots meta tag to frontend-core', () => {
     expect(build().robots.metaTag).toBe(false);
   });
+
+  it('hands custom groups to upstream with their AI-preference lines intact', () => {
+    const groups = build({
+      robots: { customGroups: [{ userAgent: ['Googlebot'], contentUsage: { 'train-ai': 'n' }, contentSignal: ['/members ai-train=no'] }] },
+    }).robots.groups;
+    expect(groups).toEqual([
+      { userAgent: ['Googlebot'], allow: [], disallow: [], contentUsage: { 'train-ai': 'n' }, contentSignal: ['/members ai-train=no'] },
+    ]);
+  });
 });

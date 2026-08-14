@@ -27,3 +27,51 @@ describe('resolveOptions', () => {
     expect(() => resolveOptions({ sitemap: { entriesPerRequest: 0 } })).toThrow();
   });
 });
+
+describe('resolveOptions — robots content preferences', () => {
+  const group = (fields: Record<string, unknown>) => resolveOptions({ robots: { customGroups: [fields] } }).robots.customGroups[0];
+
+  it('defaults both preference lists to empty so upstream emits no line', () => {
+    expect(group({})).toEqual({ userAgent: ['*'], allow: [], disallow: [], contentUsage: [], contentSignal: [] });
+  });
+
+  it('keeps rule strings as authored', () => {
+    expect(group({ contentUsage: ['train-ai=n'], contentSignal: ['ai-train=no'] })).toMatchObject({
+      contentUsage: ['train-ai=n'],
+      contentSignal: ['ai-train=no'],
+    });
+  });
+
+  it('accepts a comma-separated list and a path-scoped rule', () => {
+    expect(group({ contentUsage: ['bots=y, search=y', '/private train-ai=n,ai-output=n'] })).toMatchObject({
+      contentUsage: ['bots=y, search=y', '/private train-ai=n,ai-output=n'],
+    });
+  });
+
+  it('accepts the preferences-object form upstream also takes', () => {
+    expect(group({ contentUsage: { 'train-ai': 'n' }, contentSignal: { 'ai-train': 'no', 'search': 'yes' } })).toMatchObject({
+      contentUsage: { 'train-ai': 'n' },
+      contentSignal: { 'ai-train': 'no', 'search': 'yes' },
+    });
+  });
+
+  it('rejects a category from the other vocabulary', () => {
+    expect(() => group({ contentUsage: ['ai-train=n'] })).toThrow();
+    expect(() => group({ contentSignal: ['train-ai=no'] })).toThrow();
+  });
+
+  it('rejects a value from the other vocabulary', () => {
+    expect(() => group({ contentUsage: ['train-ai=no'] })).toThrow();
+    expect(() => group({ contentSignal: ['ai-train=n'] })).toThrow();
+  });
+
+  it('rejects a rule with no assignment, and a path that is not one', () => {
+    expect(() => group({ contentUsage: ['train-ai'] })).toThrow();
+    expect(() => group({ contentUsage: [''] })).toThrow();
+    expect(() => group({ contentUsage: ['private train-ai=n'] })).toThrow();
+  });
+
+  it('rejects a mistyped key in the object form rather than silently dropping it', () => {
+    expect(() => group({ contentUsage: { trainAi: 'n' } })).toThrow();
+  });
+});

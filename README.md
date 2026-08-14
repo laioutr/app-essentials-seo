@@ -91,6 +91,39 @@ altogether, list it in `excludePageTypes`.
 | `userAgent` | `string[]` | `['*']` |
 | `allow` | `string[]` | `[]` |
 | `disallow` | `string[]` | `[]` |
+| `contentUsage` | `string[]` or preferences object | `[]` |
+| `contentSignal` | `string[]` or preferences object | `[]` |
+
+**AI-preference lines.** `allow`/`disallow` say whether a crawler may fetch a URL. `contentUsage`
+and `contentSignal` say what it may then do with what it fetched. They are competing IETF drafts
+covering the same ground — [`aipref-vocab`][aipref-vocab] and [`aipref-contentsignals`][contentsignals] — so
+a site that wants to be understood by both sets them both.
+
+| | `contentUsage` → `Content-Usage:` | `contentSignal` → `Content-Signal:` |
+| --- | --- | --- |
+| Categories | `bots`, `train-ai`, `ai-output`, `search` | `search`, `ai-input`, `ai-train` |
+| Values | `y`, `n` | `yes`, `no` |
+
+Either field takes a preferences object for a blanket statement, or a list of raw rule strings when
+you need to scope one to a path — the form the object cannot express:
+
+```ts
+robots: {
+  customGroups: [
+    // Content-Usage: train-ai=n, ai-output=n
+    { userAgent: ['*'], contentUsage: { 'train-ai': 'n', 'ai-output': 'n' } },
+    // Content-Signal: search=yes
+    // Content-Signal: /members ai-train=no
+    { userAgent: ['*'], contentSignal: ['search=yes', '/members ai-train=no'] },
+  ],
+}
+```
+
+Rules are validated at build time, so a mistyped category or a value from the other vocabulary
+fails the build instead of shipping as a line no crawler acts on.
+
+[aipref-vocab]: https://ietf-wg-aipref.github.io/drafts/draft-ietf-aipref-vocab.html
+[contentsignals]: https://www.ietf.org/archive/id/draft-romm-aipref-contentsignals-00.html
 
 ### Example
 
