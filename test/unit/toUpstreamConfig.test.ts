@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { __resetSitemapNames } from '../../src/runtime/shared/sitemapName';
-import { toUpstreamConfig } from '../../src/runtime/shared/toUpstreamConfig';
+import { LAIOUTR_GROUP, toUpstreamConfig } from '../../src/runtime/shared/toUpstreamConfig';
 import { resolveOptions } from '../../src/types';
 
 const laioutrrc = {
@@ -236,7 +236,14 @@ describe('toUpstreamConfig — robots', () => {
       robots: { customGroups: [{ userAgent: ['Googlebot'], contentUsage: { 'train-ai': 'n' }, contentSignal: ['/members ai-train=no'] }] },
     }).robots.groups;
     expect(groups).toEqual([
-      { userAgent: ['Googlebot'], allow: [], disallow: [], contentUsage: { 'train-ai': 'n' }, contentSignal: ['/members ai-train=no'] },
+      {
+        userAgent: ['Googlebot'],
+        allow: [],
+        disallow: [],
+        contentUsage: { 'train-ai': 'n' },
+        contentSignal: ['/members ai-train=no'],
+        [LAIOUTR_GROUP]: true,
+      },
     ]);
   });
 });

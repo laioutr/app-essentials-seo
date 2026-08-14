@@ -12,6 +12,15 @@ const SITEMAP_CHUNK_SIZE = 50_000;
 const INTERNAL_DISALLOW = ['/api/', '/_laioutr/'];
 
 /**
+ * Marks a group this module contributed. `mergeDerivedRobots` reads it to tell whether the
+ * `nuxt.options.robots` write reached @nuxtjs/robots or was discarded — the two lists it merges
+ * alongside are strings it can compare, and a group is not. Underscore-prefixed to sit with the
+ * internal fields (`_normalized`, `_rules`, `_skipI18n`) upstream itself hangs off a group, and it
+ * survives upstream's `normalizeGroup`, which spreads unknown keys through.
+ */
+export const LAIOUTR_GROUP = '_laioutrEssentialsSeo';
+
+/**
  * Not `RcProject` itself: `RcProject.laioutr` is a required field carrying a required
  * `projectSecretKey`, but `module.ts` legitimately passes `{}` here for an unconfigured project.
  * Typing that as `RcProject` would assert a guarantee build time does not make. Picking the four
@@ -176,7 +185,7 @@ export const toUpstreamConfig = (input: {
       enabled: options.robots.enabled,
       sitemap: ['/sitemap_index.xml'],
       disallow: [...INTERNAL_DISALLOW, ...options.robots.extraDisallow],
-      groups: options.robots.customGroups,
+      groups: options.robots.customGroups.map((group) => ({ ...group, [LAIOUTR_GROUP]: true })),
       blockAiBots: options.robots.blockAiBots,
       blockNonSeoBots: options.robots.blockNonSeoBots,
       // frontend-core's page renderer already writes this tag and force-overrides preview renders.
