@@ -1,4 +1,4 @@
-import { addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
+import { addPlugin, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
 import { defu } from 'defu';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
 import { MODULE_NAME, resolveOptions } from './types';
@@ -38,6 +38,14 @@ export default defineNuxtModule<ModuleOptions>({
       sources: derived.sources,
     });
 
+    // Public because the page head is recomputed on client-side navigation as well as during SSR.
+    // Only the Open Graph slice is exposed — the rest of the options are read server-side.
+    nuxt.options.runtimeConfig.public[MODULE_NAME] = defu(nuxt.options.runtimeConfig.public[MODULE_NAME], {
+      openGraph: options.openGraph,
+      siteNameByHost: derived.siteNameByHost,
+      siteName: options.siteName,
+    });
+
     applyUpstreamConfig(nuxt.options as any, derived, rawOptions as any);
 
     // The nuxt.options.robots write above only reaches @nuxtjs/robots if this module is the first to
@@ -72,6 +80,11 @@ export default defineNuxtModule<ModuleOptions>({
     });
 
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
+
+    // Registers the `frontend-core:page-head:resolve` filter that adds the Open Graph tags
+    // frontend-core does not emit itself. The plugin reads `openGraph.enabled` and returns early
+    // when it is off, so the toggle lives in one place rather than being split across both.
+    addPlugin(resolve('./runtime/app/plugins/pageHead'));
 
     // Installed on the prepare step alone, so `#laioutr/*` and the orchestr server imports this
     // module's runtime resolves against exist when types are generated.

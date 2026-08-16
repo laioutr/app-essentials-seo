@@ -9,6 +9,19 @@ const PageTypeSeoSchema = z.object({
   changefreq: z.enum(['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never']).optional(),
 });
 
+const PageTypeOgSchema = z.object({
+  pageType: z.string(),
+  /** The `og:type` value, e.g. 'article' or 'product'. Free-form: the vocabulary is open-ended. */
+  type: z.string(),
+});
+
+export const OpenGraphOptionsSchema = z.object({
+  enabled: z.boolean().default(true),
+  /** Used for every page type without an entry in `pageTypes`. */
+  defaultType: z.string().default('website'),
+  pageTypes: z.array(PageTypeOgSchema).default([]),
+});
+
 const RobotsGroupSchema = z.object({
   userAgent: z.array(z.string()).default(['*']),
   allow: z.array(z.string()).default([]),
@@ -40,6 +53,7 @@ export const ModuleOptionsSchema = z.object({
   environment: z.enum(['production', 'staging', 'preview', 'development']).optional(),
   sitemap: SitemapOptionsSchema.prefault({}),
   robots: RobotsOptionsSchema.prefault({}),
+  openGraph: OpenGraphOptionsSchema.prefault({}),
 });
 
 export type ModuleOptions = z.input<typeof ModuleOptionsSchema>;

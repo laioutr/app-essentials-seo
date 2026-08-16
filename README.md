@@ -7,7 +7,7 @@
 [![Nuxt][nuxt-src]][nuxt-href]
 
 SEO essentials for [Laioutr](https://laioutr.com) frontends: a per-host `sitemap_index.xml`, its
-child sitemaps, and `robots.txt`.
+child sitemaps, `robots.txt`, and the Open Graph tags a page's `<head>` needs to share well.
 
 - [✨ &nbsp;Release Notes](/CHANGELOG.md)
 
@@ -24,6 +24,28 @@ Three routes:
   the requesting host actually serves.
 - **`/__sitemap__/<name>.xml`** — the child sitemaps themselves.
 - **`/robots.txt`** — per-host, with its `Sitemap:` line resolved against the requesting host.
+
+Plus Open Graph tags on every page — see below.
+
+### Open Graph
+
+frontend-core renders `<title>`, `meta[description]`, `meta[robots]`, `rel=canonical`, `hreflang`,
+and `og:locale` / `og:locale:alternate` on its own. This module adds the rest of the Open Graph set
+by filtering that head through `frontend-core:page-head:resolve`:
+
+| Tag | Derived from |
+| --- | --- |
+| `og:title` | The page's resolved SEO title. Omitted when the page has none and frontend-core fell back to the bare page type. |
+| `og:description` | The page's resolved SEO description. |
+| `og:type` | The page type, via `openGraph.pageTypes`; otherwise `openGraph.defaultType`. |
+| `og:url` | The canonical link, so the two can never disagree. Omitted when no market domain resolved (Studio preview). |
+| `og:site_name` | `siteName`, or the requesting host's market name. |
+
+Both title and description are read after frontend-core has substituted any `{{queries.…}}`
+placeholder and applied the locale chain, so a dynamic page shares the entity's own values.
+
+Existing values are never overwritten: a tag another app or the project itself already set survives.
+`og:image` and Twitter cards are not emitted yet.
 
 ### Child sitemap naming
 
@@ -92,6 +114,21 @@ altogether, list it in `excludePageTypes`.
 | `allow` | `string[]` | `[]` |
 | `disallow` | `string[]` | `[]` |
 
+### `openGraph`
+
+| Field | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `enabled` | `boolean` | `true` | |
+| `defaultType` | `string` | `'website'` | `og:type` for every page type without a `pageTypes` entry. |
+| `pageTypes` | `PageTypeOg[]` | `[]` | Per-page-type `og:type`. See below. |
+
+**`openGraph.pageTypes[]`**:
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `pageType` | `string` | yes | The page type token, e.g. `blog/post`. |
+| `type` | `string` | yes | The `og:type` value, e.g. `article`. Free-form — the vocabulary is open-ended. |
+
 ### Example
 
 ```ts
@@ -108,6 +145,9 @@ export default defineNuxtConfig({
     robots: {
       blockAiBots: true,
       extraDisallow: ['/search'],
+    },
+    openGraph: {
+      pageTypes: [{ pageType: 'blog/post', type: 'article' }],
     },
   },
 });
