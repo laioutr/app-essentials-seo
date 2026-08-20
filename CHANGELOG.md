@@ -1,6 +1,40 @@
 # Changelog
 
 
+## v1.2.0
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.1.1...v1.2.0)
+
+### 🚀 Enhancements
+
+- **robots:** Accept contentUsage and contentSignal on custom groups ([a504c1d](https://github.com/laioutr/app-essentials-seo/commit/a504c1d))
+- **robots:** Repeat rules under each language prefix a host serves ([2368ec1](https://github.com/laioutr/app-essentials-seo/commit/2368ec1))
+- Emit Open Graph tags for title, description, type, url and site name ([ce2c159](https://github.com/laioutr/app-essentials-seo/commit/ce2c159))
+- Default og:type per page type and key the config by page type ([bf7173e](https://github.com/laioutr/app-essentials-seo/commit/bf7173e))
+
+### 🩹 Fixes
+
+- **robots:** Land custom groups whoever installs @nuxtjs/robots first ([936eda0](https://github.com/laioutr/app-essentials-seo/commit/936eda0))
+- **sitemap:** Keep an unlaunched market's URLs out of the sitemap ([5a20b66](https://github.com/laioutr/app-essentials-seo/commit/5a20b66))
+- **robots:** Leave the X-Robots-Tag header to frontend-core ([3ec2163](https://github.com/laioutr/app-essentials-seo/commit/3ec2163))
+- Restore lint and typecheck on the Open Graph additions ([fa5e70b](https://github.com/laioutr/app-essentials-seo/commit/fa5e70b))
+- Require the core packages that carry a market's indexable flag ([ccf52e9](https://github.com/laioutr/app-essentials-seo/commit/ccf52e9))
+
+### 📖 Documentation
+
+- Design the og:type defaults and the page-type config shape ([fdb9242](https://github.com/laioutr/app-essentials-seo/commit/fdb9242))
+
+### 🤖 CI
+
+- Pin pnpm through packageManager and take Node from .nvmrc ([d20013c](https://github.com/laioutr/app-essentials-seo/commit/d20013c))
+- Authenticate to the private registry, prepare before linting, and check types ([d712358](https://github.com/laioutr/app-essentials-seo/commit/d712358))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+- Marcel Thiesies <marcel.thiesies@me.com>
+- Claude <noreply@anthropic.com>
+
 ## v1.1.1
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.1.0...v1.1.1)
