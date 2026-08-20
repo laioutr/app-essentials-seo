@@ -23,6 +23,12 @@ export const defaultVariant = <T extends { variants: Record<string, RcPageVarian
 /**
  * True when a robots directive string contains a `noindex` token. Tokens can be separated by commas,
  * whitespace, or both, so splitting on either keeps `max-snippet` from matching as a substring.
+ *
+ * A page can author `seo.robots` as a `{{queries.…}}` template that frontend-core resolves per
+ * render, and one of those reads as indexable here whatever it resolves to. That is deliberate:
+ * the value depends on query results this build cannot fetch, and the cost of being wrong is one
+ * sitemap entry for a page that then serves its own `noindex` and is dropped from the index. Pulling
+ * the real value through would mean running the page's queries at build time to decide one flag.
  */
 export const isNoindexRobots = (robots: string | undefined): boolean =>
   robots !== undefined &&

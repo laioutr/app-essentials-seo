@@ -2,7 +2,7 @@ import { addServerPlugin, createResolver, defineNuxtModule, installModule } from
 import { defu } from 'defu';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
 import { MODULE_NAME, resolveOptions } from './types';
-import { applyUpstreamConfig } from './upstreamConfig';
+import { applyUpstreamConfig, mergeDerivedRobots } from './upstreamConfig';
 import { registerLaioutrApp } from '@laioutr-core/kit';
 import type { ModuleOptions } from './types';
 import { version } from '../package.json';
@@ -13,12 +13,6 @@ export type { ModuleOptions } from './types';
 // which covers a handler written in place but not one lifted out into its own named function.
 export type { SitemapUrl } from './runtime/server/lib/alternates';
 export type { SitemapSourceBuiltContext } from './runtime/types/sitemapSource';
-
-/** Reads a `RobotsGroupInput` field that may be a single value or an array, as an array. */
-const asArray = <T>(value: T | T[] | undefined): T[] => {
-  if (value === undefined) return [];
-  return Array.isArray(value) ? value : [value];
-};
 
 export default defineNuxtModule<ModuleOptions>({
   meta: { name: MODULE_NAME, version, configKey: MODULE_NAME },
@@ -40,30 +34,9 @@ export default defineNuxtModule<ModuleOptions>({
 
     applyUpstreamConfig(nuxt.options as any, derived, rawOptions as any);
 
-    // The nuxt.options.robots write above only reaches @nuxtjs/robots if this module is the first to
-    // install it: installModule dedupes by module name, so whoever installs it first is the one whose
-    // setup reads those options, and every later install is a no-op that silently discards the write.
-    // Anything ahead of this module in `modules[]` can win that race — a project's own @nuxtjs/robots
-    // entry, another app, or a @laioutr-core/frontend-core old enough to still install it itself.
-    // This hook runs once every module's setup has finished, whatever the order, so it is what makes
-    // our sitemap and disallow entries land regardless. It must not overwrite the arrays outright —
-    // a project's own rules, and any other app's contributions, live there too.
-    nuxt.hook('robots:config', (config) => {
-      for (const sitemapUrl of derived.robots.sitemap) {
-        if (!config.sitemap.includes(sitemapUrl)) config.sitemap.push(sitemapUrl);
-      }
-      const wildcardGroup = config.groups.find((group) => {
-        const userAgents = asArray(group.userAgent);
-        return userAgents.length === 1 && userAgents[0] === '*';
-      });
-      if (wildcardGroup) {
-        const disallow = asArray(wildcardGroup.disallow);
-        for (const path of derived.robots.disallow) {
-          if (!disallow.includes(path)) disallow.push(path);
-        }
-        wildcardGroup.disallow = disallow;
-      }
-    });
+    // See mergeDerivedRobots for why our sitemap, disallow and group entries have to land here and
+    // not only through the nuxt.options.robots write above.
+    nuxt.hook('robots:config', (config) => mergeDerivedRobots(config, derived.robots));
 
     await registerLaioutrApp({
       name: MODULE_NAME,
@@ -72,6 +45,7 @@ export default defineNuxtModule<ModuleOptions>({
     });
 
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
+    addServerPlugin(resolve('./runtime/server/nitro/robots'));
 
     // Installed on the prepare step alone, so `#laioutr/*` and the orchestr server imports this
     // module's runtime resolves against exist when types are generated.

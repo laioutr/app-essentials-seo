@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveHostContext } from '../../src/runtime/server/lib/hostContext';
+import { belongsInSitemap, resolveHostContext } from '../../src/runtime/server/lib/hostContext';
 
 const de = { id: 'lng_de', code: 'de', localeChain: ['de'] };
 const fr = { id: 'lng_fr', code: 'fr', localeChain: ['fr'] };
@@ -64,5 +64,15 @@ describe('resolveHostContext', () => {
 
   it('never marks the resolved client env as preview', () => {
     expect(resolveHostContext(i18nConfig, 'shop.ch', 'de')?.clientEnv.isPreview).toBe(false);
+  });
+});
+
+describe('belongsInSitemap', () => {
+  it('lists a launched market', () => {
+    expect(belongsInSitemap({ isIndexable: true })).toBe(true);
+  });
+
+  it('keeps a market that is not launched out, since its pages render noindex', () => {
+    expect(belongsInSitemap({ isIndexable: false })).toBe(false);
   });
 });

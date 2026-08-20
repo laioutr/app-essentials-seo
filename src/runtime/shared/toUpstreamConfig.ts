@@ -9,7 +9,16 @@ const SITEMAP_CHUNK_SIZE = 50_000;
 
 /** Paths that are never useful to a crawler. Kept independent of sitemap exclusions on purpose:
  *  Disallow stops crawling, which stops a `noindex` from ever being read. */
-const INTERNAL_DISALLOW = ['/api/', '/_laioutr/'];
+export const INTERNAL_DISALLOW = ['/api/', '/_laioutr/'];
+
+/**
+ * Marks a group this module contributed. `mergeDerivedRobots` reads it to tell whether the
+ * `nuxt.options.robots` write reached @nuxtjs/robots or was discarded — the two lists it merges
+ * alongside are strings it can compare, and a group is not. Underscore-prefixed to sit with the
+ * internal fields (`_normalized`, `_rules`, `_skipI18n`) upstream itself hangs off a group, and it
+ * survives upstream's `normalizeGroup`, which spreads unknown keys through.
+ */
+export const LAIOUTR_GROUP = '_laioutrEssentialsSeo';
 
 /**
  * Not `RcProject` itself: `RcProject.laioutr` is a required field carrying a required
@@ -176,11 +185,16 @@ export const toUpstreamConfig = (input: {
       enabled: options.robots.enabled,
       sitemap: ['/sitemap_index.xml'],
       disallow: [...INTERNAL_DISALLOW, ...options.robots.extraDisallow],
-      groups: options.robots.customGroups,
+      groups: options.robots.customGroups.map((group) => ({ ...group, [LAIOUTR_GROUP]: true })),
       blockAiBots: options.robots.blockAiBots,
       blockNonSeoBots: options.robots.blockNonSeoBots,
       // frontend-core's page renderer already writes this tag and force-overrides preview renders.
       metaTag: false,
+      // Both per-page robots signals are frontend-core's, and upstream's are worse at the job: it
+      // knows nothing of a page's Studio settings, so `getPathRobotConfig` falls through to its
+      // default and asserts `index, follow` on a page the renderer is marking `noindex`. The two
+      // only agree because a crawler resolves the pair by taking the more restrictive one.
+      header: false,
     },
     sources,
   };

@@ -9,7 +9,7 @@ import { MODULE_NAME } from '../../shared/moduleName';
 import { isDynamicPath } from '../../shared/pageSelection';
 import { buildSitemapName, CONFIGURED_PAGES_TOKEN, parseSitemapName } from '../../shared/sitemapName';
 import { buildConfiguredPageUrls } from '../lib/configuredPageUrls';
-import { resolveHostContext } from '../lib/hostContext';
+import { belongsInSitemap, resolveHostContext } from '../lib/hostContext';
 import { mapPageIndexEntries } from '../lib/pageIndexUrls';
 import { runRebuildPass } from '../lib/rebuild';
 import { serveSource } from '../lib/serveSource';
@@ -101,7 +101,7 @@ export default defineNitroPlugin((nitro) => {
     // would key the cache by port while resolving markets as if it weren't there.
     const host = getRequestHost(ctx.event, { xForwardedHost: true }).split(':')[0];
     const hostContext = resolveHostContext(i18nConfig, host, parsed.locale);
-    if (!hostContext) {
+    if (!hostContext || !belongsInSitemap(hostContext.market)) {
       ctx.sources.push({ context: { name: MODULE_NAME }, urls: [] });
       return;
     }
@@ -202,7 +202,8 @@ export default defineNitroPlugin((nitro) => {
           ?.replace(/\.xml$/, '') ?? '';
       const parsed = parseSitemapName(name);
       if (!parsed) return true;
-      return resolveHostContext(i18nConfig, host, parsed.locale) !== null;
+      const hostContext = resolveHostContext(i18nConfig, host, parsed.locale);
+      return hostContext !== null && belongsInSitemap(hostContext.market);
     });
   });
 
