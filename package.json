@@ -72,6 +72,7 @@
     "@laioutr-core/frontend-core": ">=0.38.2",
     "@laioutr-core/orchestr": ">=0.38.2"
   },
+  "packageManager": "pnpm@10.15.0",
   "engines": {
     "node": ">=22.12.0",
     "pnpm": ">=10.15.0"
