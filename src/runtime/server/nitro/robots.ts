@@ -15,7 +15,7 @@ export default defineNitroPlugin((nitro) => {
   // Fires per robots.txt request with the text already rendered, so each host is answered with its
   // own language prefixes and no other host's. A prerendered robots.txt has no real request host to
   // resolve, so it finds no prefixes and is served exactly as @nuxtjs/robots rendered it.
-  nitro.hooks.hook('robots:robots-txt', (ctx: any) => {
+  nitro.hooks.hook('robots:robots-txt', (ctx) => {
     const host = getRequestHost(ctx.e, { xForwardedHost: true });
     ctx.robotsTxt = localizeRobotsTxt(ctx.robotsTxt, hostPathPrefixes(i18nConfig.markets, host));
   });
