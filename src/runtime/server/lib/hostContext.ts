@@ -8,6 +8,21 @@ export interface HostContext {
 }
 
 /**
+ * Whether a market's URLs belong in a sitemap. A market that is not launched renders every one of
+ * its pages `noindex, nofollow` — frontend-core's page renderer forces it — so listing those URLs
+ * would advertise pages that ask to be dropped the moment they are fetched.
+ *
+ * Deliberately not paired with a `Disallow` for the same host. That `noindex` is only read if the
+ * crawler is allowed to fetch the page; disallowing instead would leave the URLs discoverable by
+ * link, indexed on the strength of those links alone, and with no way left to say otherwise. So the
+ * market stays crawlable and this module simply stops advertising it.
+ *
+ * Kept out of `resolveHostContext` on purpose: that answers which domain serves a locale, and
+ * returning null here would claim this host serves none when it plainly does.
+ */
+export const belongsInSitemap = (market: Pick<RenderMarket, 'isIndexable'>): boolean => market.isIndexable;
+
+/**
  * Maps a request host and a locale onto the market domain that serves them. Returns null when the
  * host serves no domain for that locale, which the caller turns into an empty sitemap rather than
  * guessing another market's URLs.

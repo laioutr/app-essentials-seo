@@ -105,6 +105,7 @@ altogether, list it in `excludePageTypes`.
 | `blockNonSeoBots` | `boolean` | `false` | Passed through to `@nuxtjs/robots`. |
 | `extraDisallow` | `string[]` | `[]` | Appended to the wildcard (`*`) group's `Disallow` list, alongside this module's own internal `/api/` and `/_laioutr/` entries. |
 | `customGroups` | `RobotsGroup[]` | `[]` | Additional `User-agent` groups. See below. |
+| `localizeRules` | `boolean` | `true` | Repeat each rule under the language prefixes the requested host serves. See below. |
 
 **`robots.customGroups[]`**:
 
@@ -113,6 +114,64 @@ altogether, list it in `excludePageTypes`.
 | `userAgent` | `string[]` | `['*']` |
 | `allow` | `string[]` | `[]` |
 | `disallow` | `string[]` | `[]` |
+| `contentUsage` | `string[]` or preferences object | `[]` |
+| `contentSignal` | `string[]` or preferences object | `[]` |
+
+**AI-preference lines.** `allow`/`disallow` say whether a crawler may fetch a URL. `contentUsage`
+and `contentSignal` say what it may then do with what it fetched. They are competing IETF drafts
+covering the same ground — [`aipref-vocab`][aipref-vocab] and [`aipref-contentsignals`][contentsignals] — so
+a site that wants to be understood by both sets them both.
+
+| | `contentUsage` → `Content-Usage:` | `contentSignal` → `Content-Signal:` |
+| --- | --- | --- |
+| Categories | `bots`, `train-ai`, `ai-output`, `search` | `search`, `ai-input`, `ai-train` |
+| Values | `y`, `n` | `yes`, `no` |
+
+Either field takes a preferences object for a blanket statement, or a list of raw rule strings when
+you need to scope one to a path — the form the object cannot express:
+
+```ts
+robots: {
+  customGroups: [
+    // Content-Usage: train-ai=n, ai-output=n
+    { userAgent: ['*'], contentUsage: { 'train-ai': 'n', 'ai-output': 'n' } },
+    // Content-Signal: search=yes
+    // Content-Signal: /members ai-train=no
+    { userAgent: ['*'], contentSignal: ['search=yes', '/members ai-train=no'] },
+  ],
+}
+```
+
+Rules are validated at build time, so a mistyped category or a value from the other vocabulary
+fails the build instead of shipping as a line no crawler acts on.
+
+[aipref-vocab]: https://ietf-wg-aipref.github.io/drafts/draft-ietf-aipref-vocab.html
+[contentsignals]: https://www.ietf.org/archive/id/draft-romm-aipref-contentsignals-00.html
+
+**`robots.localizeRules`.** A `Disallow` matches on the URL path, so a rule written once binds only
+where it was written: on a host serving German at the root and English under `/en`, `Disallow: /login`
+never reaches `/en/login`. With `localizeRules` on — the default — each rule is repeated under every
+language prefix the requested host serves:
+
+```
+User-agent: *
+Disallow: /login
+Disallow: /en/login
+```
+
+Each host is answered with its own prefixes and no other host's, so a second market on a second
+domain does not collect rules for paths it never serves. The rewrite is additive: the rule as
+authored is always kept, and four kinds of rule are left alone —
+
+- a rule already scoped to a language (`/en/login`), on the assumption that was deliberate;
+- a wildcard rule (`*/login`), which spans every prefix already under RFC 9309;
+- the module's own `/api/` and `/_laioutr/`, which are app-root routes served under no prefix;
+- everything in a prerendered robots.txt, which has no request host to resolve prefixes from.
+
+It repeats prefixes, not translations. Laioutr page paths are themselves localizable, so if the
+German route is authored as `/anmelden` and the English one as `/login`, this produces `/anmelden`
+and `/en/anmelden` — the English spelling still needs its own rule. Set `localizeRules: false` to
+emit rules exactly as written.
 
 ### `openGraph`
 

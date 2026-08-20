@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { __resetSitemapNames } from '../../src/runtime/shared/sitemapName';
-import { toUpstreamConfig } from '../../src/runtime/shared/toUpstreamConfig';
+import { LAIOUTR_GROUP, toUpstreamConfig } from '../../src/runtime/shared/toUpstreamConfig';
 import { resolveOptions } from '../../src/types';
 
 const laioutrrc = {
@@ -245,7 +245,24 @@ describe('toUpstreamConfig — robots', () => {
     expect(build({ robots: { extraDisallow: ['/secret'] } }).robots.disallow).toEqual(['/api/', '/_laioutr/', '/secret']);
   });
 
-  it('leaves the robots meta tag to frontend-core', () => {
+  it('leaves both per-page robots signals to frontend-core', () => {
     expect(build().robots.metaTag).toBe(false);
+    expect(build().robots.header).toBe(false);
+  });
+
+  it('hands custom groups to upstream with their AI-preference lines intact', () => {
+    const groups = build({
+      robots: { customGroups: [{ userAgent: ['Googlebot'], contentUsage: { 'train-ai': 'n' }, contentSignal: ['/members ai-train=no'] }] },
+    }).robots.groups;
+    expect(groups).toEqual([
+      {
+        userAgent: ['Googlebot'],
+        allow: [],
+        disallow: [],
+        contentUsage: { 'train-ai': 'n' },
+        contentSignal: ['/members ai-train=no'],
+        [LAIOUTR_GROUP]: true,
+      },
+    ]);
   });
 });
