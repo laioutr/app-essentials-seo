@@ -138,6 +138,11 @@ export const toUpstreamConfig = (input: {
     };
   });
 
+  // The same per-host name nuxt-site-config resolves, exposed separately so runtime code can read it
+  // without importing nuxt-site-config: it is a transitive dependency of the sitemap and robots
+  // modules, and the lockfile resolves it to more than one version.
+  const siteNameByHost = Object.fromEntries(multiTenancy.flatMap((entry) => entry.hosts.map((host) => [host, entry.config.name] as const)));
+
   const resolvedEnv = resolveEnv(options, env);
 
   const site: DerivedSiteConfig = {
@@ -162,6 +167,7 @@ export const toUpstreamConfig = (input: {
 
   return {
     site,
+    siteNameByHost,
     sitemap: {
       enabled: options.sitemap.enabled,
       sitemaps,

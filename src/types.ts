@@ -10,6 +10,45 @@ const PageTypeSeoSchema = z.object({
 });
 
 /**
+ * The `og:type` of the canonical page types for which the generic `website` would be wrong. Merged
+ * under whatever a project configures, so overriding one page type keeps the rest.
+ *
+ * Every other canonical page type falls through to `defaultType`: the `core/*` set, both blog
+ * listings, product listing and search, and `location/finder` really are pages of a website, and
+ * `article` on a content page would promise an author and a publication date it does not have.
+ *
+ * Page types that other packages register are deliberately absent. This module does not own that
+ * vocabulary, and a wrong guess about someone else's page type is worse than the fall-through.
+ *
+ * Written as string literals rather than imported from `@laioutr-core/canonical-types`: its
+ * `definePageTypeToken` registers into a module-global registry as an import side effect, so
+ * importing the tokens to spell three strings would run page-type registration inside this build.
+ */
+export const DEFAULT_OG_PAGE_TYPES: Record<string, string> = {
+  'blog/post-single': 'article',
+  'ecommerce/product-detail-page': 'product',
+  'location/detail': 'place',
+};
+
+export const OpenGraphOptionsSchema = z.object({
+  enabled: z.boolean().default(true),
+  /** Used for every page type without an entry in `pageTypes`. */
+  defaultType: z.string().default('website'),
+  /**
+   * `og:type` keyed by page type, e.g. `{ 'blog/post-single': 'article' }`. Free-form on both sides:
+   * the page type vocabulary is open-ended and so is the `og:type` one.
+   *
+   * The merge happens here rather than at lookup time so that everything downstream — runtime config
+   * included — reads one effective map instead of a partial one. To move a page type off its default
+   * there is no deletion marker: set it to the type you want, `'website'` included.
+   */
+  pageTypes: z
+    .record(z.string(), z.string())
+    .default({})
+    .transform((configured) => ({ ...DEFAULT_OG_PAGE_TYPES, ...configured })),
+});
+
+/**
  * `Allow`/`Disallow` say whether a crawler may fetch a URL. The two vocabularies below say what it
  * may then do with what it fetched — train on it, ground an answer in it, show it in search. They
  * are competing IETF drafts covering the same ground, down to spelling the same yes/no differently,
@@ -105,6 +144,7 @@ export const ModuleOptionsSchema = z.object({
   environment: z.enum(['production', 'staging', 'preview', 'development']).optional(),
   sitemap: SitemapOptionsSchema.prefault({}),
   robots: RobotsOptionsSchema.prefault({}),
+  openGraph: OpenGraphOptionsSchema.prefault({}),
 });
 
 export type ModuleOptions = z.input<typeof ModuleOptionsSchema>;

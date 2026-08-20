@@ -7,7 +7,7 @@
 [![Nuxt][nuxt-src]][nuxt-href]
 
 SEO essentials for [Laioutr](https://laioutr.com) frontends: a per-host `sitemap_index.xml`, its
-child sitemaps, and `robots.txt`.
+child sitemaps, `robots.txt`, and the Open Graph tags a page's `<head>` needs to share well.
 
 - [✨ &nbsp;Release Notes](/CHANGELOG.md)
 
@@ -24,6 +24,28 @@ Three routes:
   the requesting host actually serves.
 - **`/__sitemap__/<name>.xml`** — the child sitemaps themselves.
 - **`/robots.txt`** — per-host, with its `Sitemap:` line resolved against the requesting host.
+
+Plus Open Graph tags on every page — see below.
+
+### Open Graph
+
+frontend-core renders `<title>`, `meta[description]`, `meta[robots]`, `rel=canonical`, `hreflang`,
+and `og:locale` / `og:locale:alternate` on its own. This module adds the rest of the Open Graph set
+by filtering that head through `frontend-core:page-head:resolve`:
+
+| Tag | Derived from |
+| --- | --- |
+| `og:title` | The page's resolved SEO title. Omitted when the page has none and frontend-core fell back to the bare page type. |
+| `og:description` | The page's resolved SEO description. |
+| `og:type` | The page type, via `openGraph.pageTypes` — which already maps blog posts, product detail pages and location detail pages. Every other page type gets `openGraph.defaultType`. |
+| `og:url` | The canonical link, so the two can never disagree. Omitted when no market domain resolved (Studio preview). |
+| `og:site_name` | `siteName`, or the requesting host's market name. |
+
+Both title and description are read after frontend-core has substituted any `{{queries.…}}`
+placeholder and applied the locale chain, so a dynamic page shares the entity's own values.
+
+Existing values are never overwritten: a tag another app or the project itself already set survives.
+`og:image` and Twitter cards are not emitted yet.
 
 ### Child sitemap naming
 
@@ -151,6 +173,34 @@ German route is authored as `/anmelden` and the English one as `/login`, this pr
 and `/en/anmelden` — the English spelling still needs its own rule. Set `localizeRules: false` to
 emit rules exactly as written.
 
+### `openGraph`
+
+| Field | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `enabled` | `boolean` | `true` | |
+| `defaultType` | `string` | `'website'` | `og:type` for every page type without a `pageTypes` entry. |
+| `pageTypes` | `Record<string, string>` | see below | `og:type` keyed by page type token. |
+
+**`openGraph.pageTypes`** — maps a page type token to its `og:type`, and ships with the canonical
+page types for which the generic `website` would be wrong:
+
+```ts
+{
+  'blog/post-single': 'article',
+  'ecommerce/product-detail-page': 'product',
+  'location/detail': 'place',
+}
+```
+
+What you configure is merged *over* that map, one page type at a time: an entry for
+`blog/post-single` changes that page type alone and the other two defaults survive. Every page type
+without an entry — the `core/*` set, both blog listings, product listing and search,
+`location/finder`, and anything another package registers — falls through to `defaultType`.
+
+Both sides are free-form strings, since the page type vocabulary is open-ended and so is the
+`og:type` one. There is no marker for deleting a default: to move a page type back to the generic
+type, set it to `'website'`.
+
 ### Example
 
 ```ts
@@ -167,6 +217,10 @@ export default defineNuxtConfig({
     robots: {
       blockAiBots: true,
       extraDisallow: ['/search'],
+    },
+    openGraph: {
+      // Overrides one shipped default; the product and location ones are untouched.
+      pageTypes: { 'blog/post-single': 'blog' },
     },
   },
 });

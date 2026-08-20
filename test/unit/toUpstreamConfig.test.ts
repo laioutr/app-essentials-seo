@@ -166,6 +166,24 @@ describe('toUpstreamConfig — site', () => {
   });
 });
 
+describe('toUpstreamConfig — siteNameByHost', () => {
+  it('names every host after its market when the project set no site name', () => {
+    expect(build().siteNameByHost).toMatchObject({ 'shop.ch': 'Switzerland', 'shop.de': 'Germany' });
+  });
+
+  it('covers dev hosts too, so a local render resolves the same name as production', () => {
+    expect(build().siteNameByHost).toMatchObject({
+      'shop-ch.local.laioutr.tech': 'Switzerland',
+      'shop-de.local.laioutr.tech': 'Germany',
+    });
+  });
+
+  it('lets an explicit site name win over every market name', () => {
+    const byHost = build({ siteName: 'Karls Shop' }).siteNameByHost;
+    expect(new Set(Object.values(byHost))).toEqual(new Set(['Karls Shop']));
+  });
+});
+
 describe('toUpstreamConfig — sources', () => {
   it('emits one configured-pages source per locale', () => {
     const names = build()
