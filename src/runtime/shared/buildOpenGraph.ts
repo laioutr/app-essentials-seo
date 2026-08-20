@@ -13,10 +13,10 @@ export interface OpenGraphMeta {
   ogSiteName?: string;
 }
 
-/** The `og:type` vocabulary, keyed by the page types a project configured. */
+/** The `og:type` vocabulary, keyed by page type. Already merged with this module's own defaults. */
 export interface OpenGraphConfig {
   defaultType: string;
-  pageTypes: Array<{ pageType: string; type: string }>;
+  pageTypes: Record<string, string>;
 }
 
 export interface BuildOpenGraphInput {
@@ -55,7 +55,10 @@ export const buildOpenGraph = (input: BuildOpenGraphInput): OpenGraphMeta => {
   if (seo.title && seo.title !== pageType) meta.ogTitle = seo.title;
   if (seo.description) meta.ogDescription = seo.description;
 
-  meta.ogType = config.pageTypes.find((entry) => entry.pageType === pageType)?.type ?? config.defaultType;
+  // Read through `typeof` rather than `??`: the map is a plain object parsed from project config, so
+  // it inherits Object.prototype, and a page type named `constructor` would resolve to a function.
+  const configuredType = config.pageTypes[pageType];
+  meta.ogType = typeof configuredType === 'string' ? configuredType : config.defaultType;
 
   // Omitted when there is no canonical — the locale slot is empty until a market domain resolves
   // (Studio preview), and a guessed URL is worse than none: it is what a scraper deduplicates on.

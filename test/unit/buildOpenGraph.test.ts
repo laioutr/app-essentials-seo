@@ -13,7 +13,7 @@ const build = (overrides: Partial<BuildOpenGraphInput> = {}) =>
     host: 'shop.ch',
     siteNameByHost: { 'shop.ch': 'Shop Schweiz', 'shop-ch.local.laioutr.tech': 'Shop Schweiz' },
     siteName: undefined,
-    config: { defaultType: 'website', pageTypes: [] },
+    config: { defaultType: 'website', pageTypes: {} },
     ...overrides,
   });
 
@@ -43,12 +43,19 @@ describe('buildOpenGraph og:type', () => {
   });
 
   it('uses the configured type for a mapped page type', () => {
-    const config = { defaultType: 'website', pageTypes: [{ pageType: 'blog/post', type: 'article' }] };
-    expect(build({ pageType: 'blog/post', config }).ogType).toBe('article');
+    const config = { defaultType: 'website', pageTypes: { 'blog/post-single': 'article' } };
+    expect(build({ pageType: 'blog/post-single', config }).ogType).toBe('article');
   });
 
   it('is always emitted, since og:type has no sensible absent state', () => {
     expect(build({ seo: {} }).ogType).toBe('website');
+  });
+
+  // The map is a plain object parsed from project config, so it inherits Object.prototype and a
+  // page type sharing a name with one of its members would otherwise stringify a function into the tag.
+  it('ignores a page type that names an inherited property of the map', () => {
+    expect(build({ pageType: 'constructor' }).ogType).toBe('website');
+    expect(build({ pageType: 'toString' }).ogType).toBe('website');
   });
 });
 

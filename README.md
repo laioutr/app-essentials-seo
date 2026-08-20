@@ -37,7 +37,7 @@ by filtering that head through `frontend-core:page-head:resolve`:
 | --- | --- |
 | `og:title` | The page's resolved SEO title. Omitted when the page has none and frontend-core fell back to the bare page type. |
 | `og:description` | The page's resolved SEO description. |
-| `og:type` | The page type, via `openGraph.pageTypes`; otherwise `openGraph.defaultType`. |
+| `og:type` | The page type, via `openGraph.pageTypes` — which already maps blog posts, product detail pages and location detail pages. Every other page type gets `openGraph.defaultType`. |
 | `og:url` | The canonical link, so the two can never disagree. Omitted when no market domain resolved (Studio preview). |
 | `og:site_name` | `siteName`, or the requesting host's market name. |
 
@@ -120,14 +120,27 @@ altogether, list it in `excludePageTypes`.
 | --- | --- | --- | --- |
 | `enabled` | `boolean` | `true` | |
 | `defaultType` | `string` | `'website'` | `og:type` for every page type without a `pageTypes` entry. |
-| `pageTypes` | `PageTypeOg[]` | `[]` | Per-page-type `og:type`. See below. |
+| `pageTypes` | `Record<string, string>` | see below | `og:type` keyed by page type token. |
 
-**`openGraph.pageTypes[]`**:
+**`openGraph.pageTypes`** — maps a page type token to its `og:type`, and ships with the canonical
+page types for which the generic `website` would be wrong:
 
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `pageType` | `string` | yes | The page type token, e.g. `blog/post`. |
-| `type` | `string` | yes | The `og:type` value, e.g. `article`. Free-form — the vocabulary is open-ended. |
+```ts
+{
+  'blog/post-single': 'article',
+  'ecommerce/product-detail-page': 'product',
+  'location/detail': 'place',
+}
+```
+
+What you configure is merged *over* that map, one page type at a time: an entry for
+`blog/post-single` changes that page type alone and the other two defaults survive. Every page type
+without an entry — the `core/*` set, both blog listings, product listing and search,
+`location/finder`, and anything another package registers — falls through to `defaultType`.
+
+Both sides are free-form strings, since the page type vocabulary is open-ended and so is the
+`og:type` one. There is no marker for deleting a default: to move a page type back to the generic
+type, set it to `'website'`.
 
 ### Example
 
@@ -147,7 +160,8 @@ export default defineNuxtConfig({
       extraDisallow: ['/search'],
     },
     openGraph: {
-      pageTypes: [{ pageType: 'blog/post', type: 'article' }],
+      // Overrides one shipped default; the product and location ones are untouched.
+      pageTypes: { 'blog/post-single': 'blog' },
     },
   },
 });
