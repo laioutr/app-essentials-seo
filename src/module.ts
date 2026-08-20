@@ -40,7 +40,9 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Public because the page head is recomputed on client-side navigation as well as during SSR.
     // Only the Open Graph slice is exposed — the rest of the options are read server-side.
-    nuxt.options.runtimeConfig.public[MODULE_NAME] = defu(nuxt.options.runtimeConfig.public[MODULE_NAME], {
+    // Cast because `public` is indexed as `unknown`, unlike the private half, which is indexed as `any`.
+    const publicConfig = nuxt.options.runtimeConfig.public[MODULE_NAME] as Record<string, unknown> | undefined;
+    nuxt.options.runtimeConfig.public[MODULE_NAME] = defu(publicConfig, {
       openGraph: options.openGraph,
       siteNameByHost: derived.siteNameByHost,
       siteName: options.siteName,

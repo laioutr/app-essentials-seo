@@ -1,7 +1,7 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#app';
+import type { OpenGraphConfig, OpenGraphMeta } from '../../shared/buildOpenGraph';
 import { buildOpenGraph } from '../../shared/buildOpenGraph';
 import { MODULE_NAME } from '../../shared/moduleName';
-import type { OpenGraphConfig, OpenGraphMeta } from '../../shared/buildOpenGraph';
 
 /** The slice of this module's public runtime config the page-head hook reads. */
 interface PublicConfig {

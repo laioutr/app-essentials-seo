@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildOpenGraph } from '../../src/runtime/shared/buildOpenGraph';
 import type { BuildOpenGraphInput } from '../../src/runtime/shared/buildOpenGraph';
+import { buildOpenGraph } from '../../src/runtime/shared/buildOpenGraph';
 
 const build = (overrides: Partial<BuildOpenGraphInput> = {}) =>
   buildOpenGraph({
