@@ -1,15 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { COMPLETE_TTL_MS, createSnapshotStore, INCOMPLETE_TTL_MS, snapshotState, stamp } from '../../src/runtime/server/lib/snapshotStore';
 
-const memoryStorage = () => {
+/**
+ * The slice of `CacheStore` that `createSnapshotStore` actually calls. `writeOne` is synchronous and
+ * `readOne` answers `undefined` for a key it does not hold, both as the real store does — those two
+ * shapes are the whole reason this fake is not an unstorage one.
+ */
+const memoryCache = () => {
   const map = new Map<string, unknown>();
   return {
-    getItem: async (key: string) => map.get(key) ?? null,
-    setItem: async (key: string, value: unknown) => {
+    readOne: async (key: string) =>
+      map.has(key)
+        ? { absent: false as const, value: map.get(key), staleAt: Infinity, expiresAt: Infinity, from: 'l1' as const, stale: false }
+        : undefined,
+    writeOne: (key: string, value: unknown) => {
       map.set(key, value);
     },
-    removeItem: async (key: string) => {
-      map.delete(key);
+    remove: async (keys: string[]) => {
+      for (const key of keys) map.delete(key);
     },
     _map: map,
   };
@@ -55,39 +63,39 @@ describe('snapshotState', () => {
 
 describe('createSnapshotStore', () => {
   it('keys live and pending separately, both by host', async () => {
-    const storage = memoryStorage();
-    const store = createSnapshotStore(storage as never);
-    await store.writeLive('shop.ch', 'pages-de', { urls: [{ loc: '/a' }], complete: true, ...stamp(true, NOW) });
-    await store.writePending('shop.ch', 'pages-de', { urls: [{ loc: '/b' }], complete: false, ...stamp(false, NOW) });
+    const cache = memoryCache();
+    const store = createSnapshotStore(cache as never);
+    store.writeLive('shop.ch', 'pages-de', { urls: [{ loc: '/a' }], complete: true, ...stamp(true, NOW) });
+    store.writePending('shop.ch', 'pages-de', { urls: [{ loc: '/b' }], complete: false, ...stamp(false, NOW) });
     expect((await store.readLive('shop.ch', 'pages-de'))?.urls[0].loc).toBe('/a');
     expect((await store.readPending('shop.ch', 'pages-de'))?.urls[0].loc).toBe('/b');
     expect(await store.readLive('shop.de', 'pages-de')).toBeNull();
   });
 
   it('promotes pending to live in one write and clears pending', async () => {
-    const storage = memoryStorage();
-    const store = createSnapshotStore(storage as never);
-    await store.writeLive('shop.ch', 'pages-de', { urls: [{ loc: '/old' }], complete: true, ...stamp(true, NOW) });
-    await store.writePending('shop.ch', 'pages-de', { urls: [{ loc: '/new' }], complete: true, ...stamp(true, NOW) });
+    const cache = memoryCache();
+    const store = createSnapshotStore(cache as never);
+    store.writeLive('shop.ch', 'pages-de', { urls: [{ loc: '/old' }], complete: true, ...stamp(true, NOW) });
+    store.writePending('shop.ch', 'pages-de', { urls: [{ loc: '/new' }], complete: true, ...stamp(true, NOW) });
     await store.promotePending('shop.ch', 'pages-de');
     expect((await store.readLive('shop.ch', 'pages-de'))?.urls[0].loc).toBe('/new');
     expect(await store.readPending('shop.ch', 'pages-de')).toBeNull();
   });
 
   it('is a no-op when there is no pending snapshot to promote', async () => {
-    const storage = memoryStorage();
-    const store = createSnapshotStore(storage as never);
-    await store.writeLive('shop.ch', 'pages-de', { urls: [{ loc: '/old' }], complete: true, ...stamp(true, NOW) });
+    const cache = memoryCache();
+    const store = createSnapshotStore(cache as never);
+    store.writeLive('shop.ch', 'pages-de', { urls: [{ loc: '/old' }], complete: true, ...stamp(true, NOW) });
     await store.promotePending('shop.ch', 'pages-de');
     expect((await store.readLive('shop.ch', 'pages-de'))?.urls[0].loc).toBe('/old');
   });
 
   it('keys a live snapshot exactly as the fixture seeding route writes it', async () => {
-    const storage = memoryStorage();
-    const store = createSnapshotStore(storage as never);
-    await store.writeLive('shop.ch', 'test-product-de', { urls: [], complete: true, ...stamp(true, NOW) });
+    const cache = memoryCache();
+    const store = createSnapshotStore(cache as never);
+    store.writeLive('shop.ch', 'test-product-de', { urls: [], complete: true, ...stamp(true, NOW) });
     // test/fixtures/seo/server/routes/__seed-snapshot.ts builds this string by hand, because the
     // fixture is a separate app and this module exports no test seam it could import instead.
-    expect([...storage._map.keys()]).toContain('sitemap:v1:shop.ch:test-product-de');
+    expect([...cache._map.keys()]).toContain('sitemap:v1:shop.ch:test-product-de');
   });
 });

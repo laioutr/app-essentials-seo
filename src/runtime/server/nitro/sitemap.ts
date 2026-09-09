@@ -34,8 +34,9 @@ const warnOnce = (key: string, message: string) => {
  * Background passes in flight, keyed by "<host>:<sitemapName>". `promotePending` has no
  * compare-and-swap, so two concurrent passes for the same source would duplicate upstream work and
  * could stomp on each other's progress. This only guards same-process concurrency — the realistic
- * collision — not multiple server processes; cross-process needs actual CAS on the store, which
- * unstorage does not offer. Deleted on settle so a failed pass never wedges its key.
+ * collision — not multiple server processes; cross-process would need the store's own
+ * `claimRefresh`/`releaseRefresh`, which this guard predates. Deleted on settle so a failed pass
+ * never wedges its key.
  */
 const inFlightPasses = new Map<string, Promise<void>>();
 
@@ -70,7 +71,7 @@ export default defineNitroPlugin((nitro) => {
   // — including `sources`, which only exists on the resolved runtime value, never on the input schema
   // — is recovered with a local cast instead of a hand-written global augmentation.
   const options = useRuntimeConfig()[MODULE_NAME] as ResolvedOptions & { sources: SitemapSourceDescriptor[] };
-  const store = createSnapshotStore(useUserlandCache('essentials-seo'));
+  const store = createSnapshotStore(useUserlandCache<Snapshot>('essentials-seo'));
   // frontend-core's own sanitiser strips `config` off `rcProject` before it reaches this process, so
   // `trailingSlash` has to come from the runtime-config channel frontend-core publishes it on instead.
   const trailingSlash = useRuntimeConfig().public.laioutr?.trailingSlash ?? false;
