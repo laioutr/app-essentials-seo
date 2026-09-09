@@ -28,16 +28,18 @@ export const serveSource = async (input: ServeSourceInput): Promise<SitemapUrl[]
   switch (snapshotState(live, now)) {
     case 'missing': {
       // The write is what makes this cost non-recurring: until it lands, the next request is cold
-      // too, so anything that interrupts the pass leaves the source exactly where it started.
+      // too, so anything that interrupts the pass leaves the source exactly where it started. It is
+      // not awaited because the store publishes to this instance synchronously and defers only the
+      // shared write, which nothing here needs to wait on.
       const next = await pass(null);
-      await store.writeLive(host, sitemapName, next);
+      store.writeLive(host, sitemapName, next);
       return next.urls;
     }
     case 'incomplete':
       // Serve the partial and advance it, so a reader sees growth instead of a wait.
       schedule(async () => {
         const next = await pass(live);
-        await store.writeLive(host, sitemapName, next);
+        store.writeLive(host, sitemapName, next);
       });
       break;
     case 'stale':
@@ -46,7 +48,7 @@ export const serveSource = async (input: ServeSourceInput): Promise<SitemapUrl[]
       schedule(async () => {
         const pending = await store.readPending(host, sitemapName);
         const next = await pass(pending);
-        await store.writePending(host, sitemapName, next);
+        store.writePending(host, sitemapName, next);
         if (next.complete) await store.promotePending(host, sitemapName);
       });
       break;
