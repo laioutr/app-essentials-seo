@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.3.0
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.2.0...v1.3.0)
+
+### 🚀 Enhancements
+
+- Migrate the snapshot store onto orchestr's CacheStore ([36017eb](https://github.com/laioutr/app-essentials-seo/commit/36017eb))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.2.0
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.1.1...v1.2.0)
