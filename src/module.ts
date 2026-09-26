@@ -61,7 +61,6 @@ export default defineNuxtModule<ModuleOptions>({
     addServerPlugin(resolve('./runtime/server/nitro/robots'));
 
     if (options.aiReady.enabled) {
-      addServerHandler({ middleware: true, handler: resolve('./runtime/server/middleware/markdown') });
       addServerPlugin(resolve('./runtime/server/nitro/structuredData'));
       addServerHandler({ route: '/llms.txt', handler: resolve('./runtime/server/routes/llmsTxt') });
     }
@@ -92,5 +91,13 @@ export default defineNuxtModule<ModuleOptions>({
     // project can always install it directly — the robots:config hook above covers both.
     await installModule('@nuxtjs/sitemap');
     await installModule('@nuxtjs/robots');
+
+    // Registered only now: both installs above call nuxt-site-config's own installer early in their
+    // setup, which registers ITS global middleware (the per-request init that getSiteIndexable and
+    // friends read). Adding ours any earlier would run it before that init, leaving site config
+    // empty for every request this middleware sees.
+    if (options.aiReady.enabled) {
+      addServerHandler({ middleware: true, handler: resolve('./runtime/server/middleware/markdown') });
+    }
   },
 });

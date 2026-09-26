@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { $fetch, setup } from '@nuxt/test-utils/e2e';
+import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('non-production deployments', async () => {
@@ -41,5 +41,13 @@ describe('non-production deployments', async () => {
     expect(llms.startsWith('# Switzerland\n')).toBe(true); // guard: a blank or error body would also lack pages
     expect(llms).not.toContain('## Pages');
     expect(llms).not.toContain('## Page Types');
+  });
+
+  it('marks the Markdown twin noindex, since frontend-core renders no robots meta here for this module to copy', async () => {
+    const response = await fetch('/md-fixture/page.md', {
+      headers: { host: 'shop.ch', 'x-forwarded-host': 'shop.ch', 'x-forwarded-proto': 'https' },
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
   });
 });

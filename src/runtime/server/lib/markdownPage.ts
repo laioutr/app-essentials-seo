@@ -13,7 +13,7 @@ import { domainForPath, resolveHostDomains } from './hostContext';
 import { extractLastUpdated, extractMetaRobots } from './htmlMeta';
 import { buildLinkHeader } from './linkHeader';
 import { INTERNAL_HEADER, resolveMarkdownRedirect } from './negotiation';
-import { useNitroApp } from '#imports';
+import { getSiteIndexable, useNitroApp } from '#imports';
 import type { ResolvedOptions } from '../../../types';
 import type { MarkdownSourceContext } from '../../types/markdown';
 // eslint-disable-next-line import-x/no-unresolved
@@ -46,11 +46,16 @@ export const renderMarkdownPage = async (
   const canonicalUrl = resolveUrl(path);
   const host = getRequestHost(event, { xForwardedHost: true });
   const locale = domainForPath(resolveHostDomains(i18nConfig, host).domains, path)?.language.code;
+  const indexable = getSiteIndexable(event);
 
   const respond = (markdown: string, status = 200) => {
     setResponseStatus(event, status);
     setResponseHeader(event, 'content-type', 'text/markdown; charset=utf-8');
     setResponseHeader(event, 'link', buildLinkHeader({ path, variant: 'markdown', describedby: aiReady.describedby, resolveUrl }));
+    // frontend-core renders no robots meta on a non-production deployment, and this module turns off
+    // @nuxtjs/robots' own header/meta — so without this, a twin there would carry no signal at all.
+    // This outranks whatever the page's own meta said, since the deployment itself isn't indexable.
+    if (!indexable) setResponseHeader(event, 'x-robots-tag', 'noindex, nofollow');
     // Only a 200 twin is a stable representation of the page worth caching; a 404 twin would
     // otherwise cache a real page's outage or a typo'd URL for the same duration as content.
     if (status === 200 && aiReady.markdownCacheHeaders) {
@@ -85,7 +90,14 @@ export const renderMarkdownPage = async (
   }
 
   if (!response) throw createError({ statusCode: 502, statusMessage: 'Bad Gateway' });
-  if (!response.ok && response.status !== 404) return response;
+  if (!response.ok && response.status !== 404) {
+    // This pass-through answers on behalf of every visitor asking for the Markdown twin, not just
+    // the one who happened to trigger the upstream error — any Set-Cookie meant for that one visitor
+    // must not travel here.
+    const headers = new Headers(response.headers);
+    headers.delete('set-cookie');
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  }
   const isHtml = (response.headers.get('content-type') ?? '').includes('text/html');
   if (response.status === 404 || !isHtml) return respond(notFoundMarkdown({ path, canonicalUrl, resolveUrl, locale }), 404);
 

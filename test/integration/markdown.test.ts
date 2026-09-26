@@ -59,6 +59,12 @@ describe('markdown twins', async () => {
       }
     });
 
+    it('drops any set-cookie from a pass-through error response, since it answers on behalf of every visitor', async () => {
+      const response = await get('/md-fixture/broken.md');
+      expect(response.status).toBe(500);
+      expect(response.headers.get('set-cookie')).toBeNull();
+    });
+
     it('sends a redirect to another page on to that page’s twin', async () => {
       const response = await get('/md-fixture/moved.md');
       expect(response.status).toBe(302);
