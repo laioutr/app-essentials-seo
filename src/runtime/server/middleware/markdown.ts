@@ -1,4 +1,4 @@
-import { appendResponseHeader, createError, defineEventHandler, getHeaders, getRequestURL, sendRedirect, setResponseHeader } from 'h3';
+import { appendResponseHeader, defineEventHandler, getHeaders, getRequestURL, sendRedirect, setResponseHeader } from 'h3';
 import { getRouteRules, useRuntimeConfig } from '#imports';
 import type { ResolvedOptions } from '../../../types';
 import { toMarkdownPath } from '../../shared/markdownPath';
@@ -27,10 +27,6 @@ export default defineEventHandler(async (event) => {
   const resolveUrl = (path: string) => `${origin}${path}`;
 
   switch (decision.kind) {
-    case 'not-acceptable':
-      appendResponseHeader(event, 'vary', NEGOTIATION_VARY);
-      setUncacheable(event);
-      throw createError({ statusCode: 406, statusMessage: 'Not Acceptable', message: 'Supported types: text/html, text/markdown, text/plain' });
     case 'redirect':
       appendResponseHeader(event, 'vary', NEGOTIATION_VARY);
       setUncacheable(event);

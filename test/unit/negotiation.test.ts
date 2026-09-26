@@ -29,8 +29,14 @@ describe('decideNegotiation', () => {
     });
   });
 
-  it('answers 406 when nothing acceptable was asked for', () => {
-    expect(decide('/about', { accept: 'application/pdf' })).toEqual({ kind: 'not-acceptable' });
+  it('falls through to html when nothing acceptable was asked for, so a custom route still answers as it always did', () => {
+    expect(decide('/about', { accept: 'application/pdf' })).toEqual({ kind: 'html', path: '/about', negotiated: true });
+  });
+
+  it('normalises a leading run of slashes and backslashes before deciding, so a negotiated redirect can never leave this origin', () => {
+    expect(decide('//evil.com/x', { accept: 'text/markdown' })).toEqual({ kind: 'redirect', path: '/evil.com/x' });
+    expect(decide('/\\evil.com/x', { accept: 'text/markdown' })).toEqual({ kind: 'redirect', path: '/evil.com/x' });
+    expect(decide('//evil.com/x.md')).toEqual({ kind: 'render', path: '/evil.com/x' });
   });
 
   it('never negotiates when negotiation is off, but still marks the page', () => {

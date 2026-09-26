@@ -9,7 +9,6 @@ export const NEGOTIATION_VARY = 'Accept, Sec-Fetch-Dest, User-Agent';
 
 export type NegotiationDecision =
   | { kind: 'skip' }
-  | { kind: 'not-acceptable' }
   | { kind: 'render'; path: string }
   | { kind: 'redirect'; path: string }
   | { kind: 'html'; path: string; negotiated: boolean };
@@ -29,13 +28,19 @@ const negotiateRepresentation = (headers: Record<string, string | undefined>) =>
   return negotiateContent(accept, secFetchDest);
 };
 
+// event.path is raw, so a client can send `//evil.com/x` or `/\evil.com/x`; normalising the leading
+// run to a single `/` (the same rule h3's getRequestURL applies) keeps every decision on this origin,
+// so a negotiated redirect can never send a client to an attacker-controlled host.
+const LEADING_SLASHES = /^[/\\]+/;
+
 export const decideNegotiation = (request: {
   path: string;
   headers: Record<string, string | undefined>;
   contentNegotiation: boolean;
 }): NegotiationDecision => {
-  const queryIndex = request.path.indexOf('?');
-  const path = queryIndex === -1 ? request.path : request.path.slice(0, queryIndex);
+  const normalizedPath = request.path.replace(LEADING_SLASHES, '/');
+  const queryIndex = normalizedPath.indexOf('?');
+  const path = queryIndex === -1 ? normalizedPath : normalizedPath.slice(0, queryIndex);
   if (path.startsWith('/.well-known/')) return SKIP;
   if (request.headers[INTERNAL_HEADER]) return SKIP;
 
@@ -52,8 +57,9 @@ export const decideNegotiation = (request: {
   if (isExplicit) return { kind: 'render', path: pagePath };
   if (!request.contentNegotiation) return { kind: 'html', path, negotiated: false };
 
+  // 'not-acceptable' falls through to html too: a client asking for nothing this module offers still
+  // gets the route it always would have, rather than a 406 that breaks a custom route's own answer.
   const representation = negotiateRepresentation(request.headers);
-  if (representation === 'not-acceptable') return { kind: 'not-acceptable' };
   if (representation === 'markdown') return { kind: 'redirect', path };
   return { kind: 'html', path, negotiated: true };
 };
