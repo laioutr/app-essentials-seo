@@ -30,4 +30,8 @@ describe('structured data', () => {
   it('leaves Markdown alone when there is none', () => {
     expect(appendStructuredData('# Shoe\n', '<p>x</p>')).toBe('# Shoe\n');
   });
+
+  it('does not treat a script as JSON-LD when data-type masquerades as type', () => {
+    expect(extractJsonLd('<script data-type="application/ld+json" type="text/javascript">alert(1)</script>')).toEqual([]);
+  });
 });

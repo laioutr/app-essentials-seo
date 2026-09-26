@@ -1,4 +1,4 @@
-const JSON_LD_SCRIPT = /<script\b[^>]*\btype\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script\s*>/gi;
+const JSON_LD_SCRIPT = /<script\b[^>]*\stype\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script\s*>/gi;
 
 export const extractJsonLd = (html: string): string[] =>
   [...html.matchAll(JSON_LD_SCRIPT)].map((match) => (match[1] ?? '').trim()).filter(Boolean);
