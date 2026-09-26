@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v1.4.1
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.4.0...v1.4.1)
+
+### 🩹 Fixes
+
+- Vary negotiated responses on Accept only ([8aa658f](https://github.com/laioutr/app-essentials-seo/commit/8aa658f))
+
+### 📖 Documentation
+
+- Add the design and plan for Markdown twins and llms.txt ([1955215](https://github.com/laioutr/app-essentials-seo/commit/1955215))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.4.0
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.3.0...v1.4.0)
