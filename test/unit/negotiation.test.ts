@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { contentNegotiationFor, decideNegotiation, INTERNAL_HEADER, resolveMarkdownRedirect } from '../../src/runtime/server/lib/negotiation';
+import {
+  contentNegotiationFor,
+  decideNegotiation,
+  INTERNAL_HEADER,
+  NEGOTIATION_VARY,
+  resolveMarkdownRedirect,
+} from '../../src/runtime/server/lib/negotiation';
 
 const decide = (path: string, headers: Record<string, string> = {}, contentNegotiation = true) =>
   decideNegotiation({ path, headers, contentNegotiation });
@@ -60,6 +66,17 @@ describe('contentNegotiationFor', () => {
     expect(contentNegotiationFor(true, { isr: 60 })).toBe(false);
     expect(contentNegotiationFor(true, { cache: { maxAge: 60 } })).toBe(false);
     expect(contentNegotiationFor(true, { cache: { varies: ['accept', 'sec-fetch-dest', 'user-agent'] } })).toBe(true);
+  });
+
+  it('only needs the cache to vary on Accept', () => {
+    expect(contentNegotiationFor(true, { cache: { varies: ['Accept'] } })).toBe(true);
+    expect(contentNegotiationFor(true, { cache: { varies: ['user-agent'] } })).toBe(false);
+  });
+});
+
+describe('NEGOTIATION_VARY', () => {
+  it('varies on Accept alone, so caches are not split per user agent', () => {
+    expect(NEGOTIATION_VARY).toBe('Accept');
   });
 });
 

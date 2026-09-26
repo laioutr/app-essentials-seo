@@ -102,7 +102,8 @@ describe('markdown twins', async () => {
       const link = response.headers.get('link') ?? '';
       expect(link).toContain('<https://shop.ch/index.md>; rel="alternate"; type="text/markdown"');
       expect(link).toContain('<https://shop.ch/llms.txt>; rel="describedby"');
-      expect(response.headers.get('vary')).toContain('User-Agent');
+      expect(response.headers.get('vary')).toContain('Accept');
+      expect(response.headers.get('vary')).not.toContain('User-Agent');
     });
 
     it('never negotiates a non-GET request', async () => {

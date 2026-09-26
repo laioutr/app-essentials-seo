@@ -5,7 +5,13 @@ import { fromMarkdownPath, isReservedPath, markdownAlternatePath, toMarkdownPath
 /** Marks the middleware's own fetch of a page's HTML, so that request is never negotiated again. */
 export const INTERNAL_HEADER = 'x-essentials-seo-internal';
 
-export const NEGOTIATION_VARY = 'Accept, Sec-Fetch-Dest, User-Agent';
+/**
+ * Only HTML is ever cached under a page URL — the redirect to the twin is `no-store` — so `Vary` just
+ * has to let a Markdown-preferring `Accept` past a cached HTML copy. `Sec-Fetch-Dest` only ever steers
+ * towards HTML, and `User-Agent` would split caches per browser build; an AI agent served cached HTML
+ * still finds the twin through the `Link` header.
+ */
+export const NEGOTIATION_VARY = 'Accept';
 
 export type NegotiationDecision =
   | { kind: 'skip' }
