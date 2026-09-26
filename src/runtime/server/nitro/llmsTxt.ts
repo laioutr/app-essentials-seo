@@ -1,5 +1,5 @@
 import { defineEventHandler, getRequestHost, getRequestURL, type H3Event, setResponseHeader } from 'h3';
-import { defineCachedFunction, getSiteConfig, getSiteIndexable, useRuntimeConfig, useUserlandCache } from '#imports';
+import { defineCachedFunction, defineNitroPlugin, getSiteConfig, getSiteIndexable, useRuntimeConfig, useUserlandCache } from '#imports';
 import type { ResolvedOptions } from '../../../types';
 import type { SitemapSourceDescriptor } from '../../shared/toUpstreamConfig';
 import { MODULE_NAME } from '../../shared/moduleName';
@@ -46,7 +46,7 @@ const build = async (event: H3Event): Promise<string> => {
 
 let cachedBuild: ((event: H3Event) => Promise<string>) | undefined;
 
-export default defineEventHandler(async (event) => {
+const serveLlmsTxt = defineEventHandler(async (event) => {
   const { aiReady } = useRuntimeConfig(event)[MODULE_NAME] as Options;
   const seconds = aiReady.llmsTxtCacheSeconds;
   const cache = !import.meta.dev && seconds > 0;
@@ -58,4 +58,11 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'content-type', 'text/plain; charset=utf-8');
   if (cache) setResponseHeader(event, 'cache-control', `public, max-age=${seconds}, s-maxage=${seconds}, stale-while-revalidate=3600`);
   return body;
+});
+
+// Mounted on the router from a plugin rather than through `addServerHandler({ route })`: Nitro types
+// every such route by importing its handler into the app's type context, where this file's
+// server-only imports and the `#laioutr/*` aliases do not exist.
+export default defineNitroPlugin((nitro) => {
+  nitro.router.use('/llms.txt', serveLlmsTxt);
 });
