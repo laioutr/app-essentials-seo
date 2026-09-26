@@ -23,15 +23,14 @@ export interface HostContext {
 export const belongsInSitemap = (market: Pick<RenderMarket, 'isIndexable'>): boolean => market.isIndexable;
 
 /**
- * Maps a request host and a locale onto the market domain that serves them. Returns null when the
- * host serves no domain for that locale, which the caller turns into an empty sitemap rather than
- * guessing another market's URLs.
- *
- * An unknown host resolves to the default market, matching how the frontend treats localhost and
- * unrecognised hosts. Preview deployments are kept out of the index by site config, not by an empty
- * sitemap.
+ * The market a request host resolves to, and the domains it serves on that host — the one a request
+ * to the bare host lands on first. An unknown host resolves to the default market, matching how the
+ * frontend treats localhost and unrecognised hosts.
  */
-export const resolveHostContext = (i18nConfig: RenderI18nConfig, host: string, locale: string): HostContext | null => {
+export const resolveHostDomains = (
+  i18nConfig: RenderI18nConfig,
+  host: string
+): { market: RenderMarket; domains: RenderMarketDomain[] } => {
   // Anchored to the port rather than split on the first colon, which would truncate a bracketed
   // IPv6 authority to "[".
   const bareHost = host.replace(/:\d+$/, '');
@@ -45,7 +44,21 @@ export const resolveHostContext = (i18nConfig: RenderI18nConfig, host: string, l
     (domain) => domain.host === bareHost || domain.host === wwwAlt || domain.devHost === bareHost
   );
   const candidates = onThisHost.length > 0 ? onThisHost : market.domains;
-  const domain = candidates.find((candidate) => candidate.language.code === locale);
+  const primary =
+    candidates.find((domain) => domain.id === market.defaultDomain?.id) ?? candidates.find((domain) => !domain.path) ?? candidates[0];
+  return { market, domains: primary ? [primary, ...candidates.filter((domain) => domain !== primary)] : [] };
+};
+
+/**
+ * Maps a request host and a locale onto the market domain that serves them. Returns null when the
+ * host serves no domain for that locale, which the caller turns into an empty sitemap rather than
+ * guessing another market's URLs.
+ *
+ * Preview deployments are kept out of the index by site config, not by an empty sitemap.
+ */
+export const resolveHostContext = (i18nConfig: RenderI18nConfig, host: string, locale: string): HostContext | null => {
+  const { market, domains } = resolveHostDomains(i18nConfig, host);
+  const domain = domains.find((candidate) => candidate.language.code === locale);
   if (!domain) return null;
 
   return {
@@ -60,4 +73,14 @@ export const resolveHostContext = (i18nConfig: RenderI18nConfig, host: string, l
       domain,
     },
   };
+};
+
+/** The domain serving `path` on one host: the longest matching path prefix, else the host root. */
+export const domainForPath = (domains: RenderMarketDomain[], path: string): RenderMarketDomain | undefined => {
+  const prefixed = domains
+    .filter((domain) => domain.path)
+    .map((domain) => ({ domain, prefix: domain.path!.replace(/\/+$/, '') }))
+    .filter(({ prefix }) => path === prefix || path.startsWith(`${prefix}/`))
+    .sort((a, b) => b.prefix.length - a.prefix.length);
+  return prefixed[0]?.domain ?? domains.find((domain) => !domain.path) ?? domains[0];
 };
