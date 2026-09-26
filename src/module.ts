@@ -46,7 +46,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // See mergeDerivedRobots for why our sitemap, disallow and group entries have to land here and
     // not only through the nuxt.options.robots write above.
-    nuxt.hook('robots:config', (config) => mergeDerivedRobots(config, derived.robots));
+    nuxt.hook('robots:config', (config) => mergeDerivedRobots(config, { ...derived.robots, wildcard: derived.robotsWildcard }));
 
     await registerLaioutrApp({
       name: MODULE_NAME,

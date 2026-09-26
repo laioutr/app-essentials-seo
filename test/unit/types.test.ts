@@ -109,3 +109,21 @@ describe('resolveOptions — robots content preferences', () => {
     expect(() => group({ contentUsage: { trainAi: 'n' } })).toThrow();
   });
 });
+
+describe('resolveOptions — wildcard content preferences', () => {
+  it('states search and AI-answer use by default, and leaves training unstated', () => {
+    const { robots } = resolveOptions(undefined);
+    expect(robots.contentSignal).toEqual(['search=yes, ai-input=yes']);
+    expect(robots.contentUsage).toEqual(['search=y, ai-output=y']);
+  });
+
+  it('lets a project clear them', () => {
+    const { robots } = resolveOptions({ robots: { contentSignal: [], contentUsage: [] } });
+    expect(robots.contentSignal).toEqual([]);
+    expect(robots.contentUsage).toEqual([]);
+  });
+
+  it('rejects an unknown category', () => {
+    expect(() => resolveOptions({ robots: { contentSignal: ['ai-trian=no'] } })).toThrow();
+  });
+});

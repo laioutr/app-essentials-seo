@@ -30,4 +30,9 @@ describe('non-production deployments', async () => {
     expect(txt).toContain('User-agent: *'); // guard: a blank or error body would also "not contain" Sitemap:
     expect(txt).not.toContain('Sitemap:');
   });
+
+  it('states no content preferences while indexing is disabled', () => {
+    expect(txt).toContain('User-agent: *'); // guard, as above
+    expect(txt).not.toContain('Content-Signal');
+  });
 });

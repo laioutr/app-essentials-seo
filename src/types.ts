@@ -102,8 +102,11 @@ const contentRuleSchema = (categories: readonly string[], values: readonly strin
     );
 };
 
-const contentPreferenceSchema = <Shape extends z.ZodRawShape>(preferences: z.ZodObject<Shape>, values: readonly string[]) =>
-  z.union([z.array(contentRuleSchema(Object.keys(preferences.shape), values)), preferences]).default([]);
+const contentPreferenceSchema = <Shape extends z.ZodRawShape>(
+  preferences: z.ZodObject<Shape>,
+  values: readonly string[],
+  fallback: string[] = []
+) => z.union([z.array(contentRuleSchema(Object.keys(preferences.shape), values)), preferences]).default(fallback);
 
 const RobotsGroupSchema = z.object({
   userAgent: z.array(z.string()).default(['*']),
@@ -136,6 +139,14 @@ export const RobotsOptionsSchema = z.object({
   /** Repeat each Allow/Disallow rule under the language prefixes the requested host serves, so a
    *  rule written once covers a market's other languages. See `localizeRobotsTxt`. */
   localizeRules: z.boolean().default(true),
+  /**
+   * `Content-Usage` for the `*` group. Defaults to allowing search and AI answers. Training is left
+   * unstated: allowing or reserving it is the site owner's legal decision, and "no preference" is
+   * the only answer this module can give on their behalf. `[]` emits none.
+   */
+  contentUsage: contentPreferenceSchema(ContentUsagePreferencesSchema, CONTENT_USAGE_VALUES, ['search=y, ai-output=y']),
+  /** `Content-Signal` for the `*` group. Same defaults, other vocabulary. */
+  contentSignal: contentPreferenceSchema(ContentSignalPreferencesSchema, CONTENT_SIGNAL_VALUES, ['search=yes, ai-input=yes']),
 });
 
 export const ModuleOptionsSchema = z.object({

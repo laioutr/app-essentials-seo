@@ -65,6 +65,8 @@ const asArray = <T>(value: T | T[] | undefined): T[] => {
 interface UpstreamRobotsGroup {
   userAgent?: string | string[];
   disallow?: string | string[];
+  contentUsage?: unknown;
+  contentSignal?: unknown;
 }
 
 /** The slice of @nuxtjs/robots' resolved options this module contributes to. */
@@ -95,7 +97,12 @@ interface UpstreamRobotsConfig {
  */
 export const mergeDerivedRobots = (
   config: UpstreamRobotsConfig,
-  derived: { sitemap: string[]; disallow: string[]; groups: UpstreamRobotsGroup[] }
+  derived: {
+    sitemap: string[];
+    disallow: string[];
+    groups: UpstreamRobotsGroup[];
+    wildcard?: { contentUsage: unknown; contentSignal: unknown };
+  }
 ): void => {
   for (const sitemapUrl of derived.sitemap) {
     if (!config.sitemap.includes(sitemapUrl)) config.sitemap.push(sitemapUrl);
@@ -111,6 +118,15 @@ export const mergeDerivedRobots = (
       if (!disallow.includes(path)) disallow.push(path);
     }
     wildcardGroup.disallow = disallow;
+  }
+
+  // A value already on the group is the project's own, set through raw robots config, and wins.
+  const isUnset = (value: unknown) => value === undefined || (Array.isArray(value) && value.length === 0);
+  if (wildcardGroup && derived.wildcard) {
+    for (const key of ['contentUsage', 'contentSignal'] as const) {
+      const ours = derived.wildcard[key];
+      if (isUnset(wildcardGroup[key]) && !isUnset(ours)) wildcardGroup[key] = ours;
+    }
   }
 
   if (!config.groups.some((group) => LAIOUTR_GROUP in group)) config.groups.push(...derived.groups);
