@@ -37,10 +37,13 @@
     "> 0.5% and not dead"
   ],
   "dependencies": {
+    "@mdream/js": "^1.7.2",
     "@nuxt/kit": "3.16.2",
     "@nuxtjs/robots": "^5.7.1",
     "@nuxtjs/sitemap": "^7.6.0",
     "defu": "^6.1.7",
+    "mdream": "^1.7.2",
+    "yaml": "^2.9.1",
     "zod": "3.25.61"
   },
   "devDependencies": {
