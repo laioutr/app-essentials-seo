@@ -155,4 +155,14 @@ describe('sitemap and robots', async () => {
       expect(await onHost('/robots.txt', 'shop.de')).toContain('Sitemap: https://shop.de/sitemap_index.xml');
     });
   });
+
+  describe('content preferences', () => {
+    it('states the default Content-Signal and Content-Usage on the wildcard group', async () => {
+      const txt = await onHost('/robots.txt', 'shop.ch');
+      expect(txt).toContain('User-agent: *');
+      expect(txt).toContain('Content-Signal: search=yes, ai-input=yes');
+      expect(txt).toContain('Content-Usage: search=y, ai-output=y');
+      expect(txt).not.toContain('ai-train');
+    });
+  });
 });

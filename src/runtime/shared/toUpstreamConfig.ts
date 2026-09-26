@@ -202,6 +202,12 @@ export const toUpstreamConfig = (input: {
       // only agree because a crawler resolves the pair by taking the more restrictive one.
       header: false,
     },
+    // Kept off `robots` because that object is written to `nuxt.options.robots`, where these are not
+    // top-level options; they reach the `*` group through the `robots:config` hook instead.
+    robotsWildcard: {
+      contentUsage: options.robots.contentUsage,
+      contentSignal: options.robots.contentSignal,
+    },
     sources,
   };
 };

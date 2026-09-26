@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { belongsInSitemap, resolveHostContext } from '../../src/runtime/server/lib/hostContext';
+import { belongsInSitemap, domainForPath, resolveHostContext, resolveHostDomains } from '../../src/runtime/server/lib/hostContext';
 
 const de = { id: 'lng_de', code: 'de', localeChain: ['de'] };
 const fr = { id: 'lng_fr', code: 'fr', localeChain: ['fr'] };
@@ -64,6 +64,31 @@ describe('resolveHostContext', () => {
 
   it('never marks the resolved client env as preview', () => {
     expect(resolveHostContext(i18nConfig, 'shop.ch', 'de')?.clientEnv.isPreview).toBe(false);
+  });
+});
+
+describe('resolveHostDomains', () => {
+  const de = { code: 'de', localeChain: ['de'] };
+  const fr = { code: 'fr', localeChain: ['fr'] };
+  const chDe = { id: 'd1', host: 'shop.ch', devHost: 'shop-ch.local', language: de };
+  const chFr = { id: 'd2', host: 'shop.ch', path: '/fr', devHost: 'shop-ch.local', language: fr };
+  const ch = { id: 'mkt_ch', domains: [chFr, chDe], defaultDomain: chDe };
+  const i18n = { hostToMarket: { 'shop.ch': ch }, defaultMarket: ch } as never;
+
+  it('puts the market default domain first', () => {
+    expect(resolveHostDomains(i18n, 'shop.ch').domains).toEqual([chDe, chFr]);
+  });
+
+  it('tolerates a www. spelling and a port', () => {
+    expect(resolveHostDomains(i18n, 'www.shop.ch:3000').market).toBe(ch);
+  });
+
+  it('picks the longest matching path prefix, else the root domain', () => {
+    const { domains } = resolveHostDomains(i18n, 'shop.ch');
+    expect(domainForPath(domains, '/fr/produits/a')).toBe(chFr);
+    expect(domainForPath(domains, '/fr')).toBe(chFr);
+    expect(domainForPath(domains, '/france')).toBe(chDe);
+    expect(domainForPath(domains, '/')).toBe(chDe);
   });
 });
 

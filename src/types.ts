@@ -102,8 +102,11 @@ const contentRuleSchema = (categories: readonly string[], values: readonly strin
     );
 };
 
-const contentPreferenceSchema = <Shape extends z.ZodRawShape>(preferences: z.ZodObject<Shape>, values: readonly string[]) =>
-  z.union([z.array(contentRuleSchema(Object.keys(preferences.shape), values)), preferences]).default([]);
+const contentPreferenceSchema = <Shape extends z.ZodRawShape>(
+  preferences: z.ZodObject<Shape>,
+  values: readonly string[],
+  fallback: string[] = []
+) => z.union([z.array(contentRuleSchema(Object.keys(preferences.shape), values)), preferences]).default(fallback);
 
 const RobotsGroupSchema = z.object({
   userAgent: z.array(z.string()).default(['*']),
@@ -114,6 +117,52 @@ const RobotsGroupSchema = z.object({
   contentUsage: contentPreferenceSchema(ContentUsagePreferencesSchema, CONTENT_USAGE_VALUES),
   /** `Content-Signal` lines for this group. Same shape, other vocabulary. */
   contentSignal: contentPreferenceSchema(ContentSignalPreferencesSchema, CONTENT_SIGNAL_VALUES),
+});
+
+const LlmsTxtLinkSchema = z.object({
+  title: z.string(),
+  href: z.string(),
+  description: z.string().optional(),
+});
+
+const LlmsTxtSectionSchema = z.object({
+  title: z.string(),
+  description: z.union([z.string(), z.array(z.string())]).optional(),
+  links: z.array(LlmsTxtLinkSchema).default([]),
+  /** Rendered under `## Optional`, which the llms.txt proposal marks as skippable. */
+  optional: z.boolean().default(false),
+});
+
+export type LlmsTxtSectionOption = z.output<typeof LlmsTxtSectionSchema>;
+
+/**
+ * Mirrors nuxt-ai-ready's `aiReady` options, so the resolved value can be handed to that module
+ * unchanged once frontends run Nuxt 4. `llmsTxt.pageTypes` is this module's own addition.
+ */
+export const AiReadyOptionsSchema = z.object({
+  enabled: z.boolean().default(true),
+  /** Redirect requests that prefer Markdown (by `Accept` or a known AI agent) to the `.md` URL. */
+  contentNegotiation: z.boolean().default(true),
+  /** Advertise `/llms.txt` as `rel="describedby"` in the page head and `Link` headers. */
+  describedby: z.boolean().default(true),
+  /** Merged over this module's defaults; see `DEFAULT_MDREAM_OPTIONS`. */
+  mdreamOptions: z.record(z.string(), z.unknown()).default({}),
+  markdownCacheHeaders: z
+    .union([z.literal(false), z.object({ maxAge: z.number().int().min(0).default(3600), swr: z.boolean().default(true) })])
+    .prefault({}),
+  llmsTxtCacheSeconds: z.number().int().min(0).default(600),
+  llmsTxt: z
+    .object({
+      /** Link listed pages to their `.md` URL. Upstream defaults to false; every page here has one. */
+      markdownLinks: z.boolean().default(true),
+      notes: z.union([z.string(), z.array(z.string())]).default([]),
+      sections: z.array(LlmsTxtSectionSchema).default([]),
+      /** Title/description per dynamic page type in `## Page Types`; `false` leaves the type out. */
+      pageTypes: z
+        .record(z.string(), z.union([z.literal(false), z.object({ title: z.string().optional(), description: z.string().optional() })]))
+        .default({}),
+    })
+    .prefault({}),
 });
 
 export const SitemapOptionsSchema = z.object({
@@ -136,6 +185,14 @@ export const RobotsOptionsSchema = z.object({
   /** Repeat each Allow/Disallow rule under the language prefixes the requested host serves, so a
    *  rule written once covers a market's other languages. See `localizeRobotsTxt`. */
   localizeRules: z.boolean().default(true),
+  /**
+   * `Content-Usage` for the `*` group. Defaults to allowing search and AI answers. Training is left
+   * unstated: allowing or reserving it is the site owner's legal decision, and "no preference" is
+   * the only answer this module can give on their behalf. `[]` emits none.
+   */
+  contentUsage: contentPreferenceSchema(ContentUsagePreferencesSchema, CONTENT_USAGE_VALUES, ['search=y, ai-output=y']),
+  /** `Content-Signal` for the `*` group. Same defaults, other vocabulary. */
+  contentSignal: contentPreferenceSchema(ContentSignalPreferencesSchema, CONTENT_SIGNAL_VALUES, ['search=yes, ai-input=yes']),
 });
 
 export const ModuleOptionsSchema = z.object({
@@ -145,6 +202,7 @@ export const ModuleOptionsSchema = z.object({
   sitemap: SitemapOptionsSchema.prefault({}),
   robots: RobotsOptionsSchema.prefault({}),
   openGraph: OpenGraphOptionsSchema.prefault({}),
+  aiReady: AiReadyOptionsSchema.prefault({}),
 });
 
 export type ModuleOptions = z.input<typeof ModuleOptionsSchema>;

@@ -27,7 +27,7 @@
   "pages": {
     "p_home": {
       "id": "p_home", "type": "core/home", "path": "/", "queries": {},
-      "variants": { "v": { "id": "v", "seo": { "title": {}, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
+      "variants": { "v": { "id": "v", "seo": { "title": { "de": "Startseite", "fr": "Accueil" }, "description": {} }, "sections": { "header": [], "body": [], "footer": [] }, "queries": {}, "studio": { "label": "Default" } } },
       "createdAt": "2026-01-01T00:00:00Z", "updatedAt": "2026-01-01T00:00:00Z"
     },
     "p_hidden": {

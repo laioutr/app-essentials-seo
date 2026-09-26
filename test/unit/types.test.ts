@@ -109,3 +109,54 @@ describe('resolveOptions — robots content preferences', () => {
     expect(() => group({ contentUsage: { trainAi: 'n' } })).toThrow();
   });
 });
+
+describe('resolveOptions — wildcard content preferences', () => {
+  it('states search and AI-answer use by default, and leaves training unstated', () => {
+    const { robots } = resolveOptions(undefined);
+    expect(robots.contentSignal).toEqual(['search=yes, ai-input=yes']);
+    expect(robots.contentUsage).toEqual(['search=y, ai-output=y']);
+  });
+
+  it('lets a project clear them', () => {
+    const { robots } = resolveOptions({ robots: { contentSignal: [], contentUsage: [] } });
+    expect(robots.contentSignal).toEqual([]);
+    expect(robots.contentUsage).toEqual([]);
+  });
+
+  it('rejects an unknown category', () => {
+    expect(() => resolveOptions({ robots: { contentSignal: ['ai-trian=no'] } })).toThrow();
+  });
+});
+
+describe('resolveOptions — aiReady', () => {
+  it('fills upstream-shaped defaults', () => {
+    const { aiReady } = resolveOptions(undefined);
+    expect(aiReady).toEqual({
+      enabled: true,
+      contentNegotiation: true,
+      describedby: true,
+      mdreamOptions: {},
+      markdownCacheHeaders: { maxAge: 3600, swr: true },
+      llmsTxtCacheSeconds: 600,
+      llmsTxt: { markdownLinks: true, notes: [], sections: [], pageTypes: {} },
+    });
+  });
+
+  it('accepts authored sections and page-type overrides', () => {
+    const { aiReady } = resolveOptions({
+      aiReady: {
+        llmsTxt: {
+          notes: 'Prices include VAT.',
+          sections: [{ title: 'Help', links: [{ title: 'FAQ', href: '/faq' }] }],
+          pageTypes: { 'blog/post-single': false, 'ecommerce/product-detail-page': { title: 'Products' } },
+        },
+      },
+    });
+    expect(aiReady.llmsTxt.sections[0]).toEqual({ title: 'Help', links: [{ title: 'FAQ', href: '/faq' }], optional: false });
+    expect(aiReady.llmsTxt.pageTypes['blog/post-single']).toBe(false);
+  });
+
+  it('lets markdown cache headers be switched off', () => {
+    expect(resolveOptions({ aiReady: { markdownCacheHeaders: false } }).aiReady.markdownCacheHeaders).toBe(false);
+  });
+});

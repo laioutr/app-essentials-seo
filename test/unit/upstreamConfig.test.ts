@@ -133,4 +133,25 @@ describe('mergeDerivedRobots', () => {
     mergeDerivedRobots(config, derived());
     expect(config.groups[0].disallow).toEqual([]);
   });
+
+  const wildcard = { contentSignal: ['search=yes, ai-input=yes'], contentUsage: ['search=y, ai-output=y'] };
+
+  it('puts the default content preferences on the wildcard group', () => {
+    const config = upstreamOnly();
+    mergeDerivedRobots(config, { ...derived(), wildcard });
+    expect(config.groups[0]).toMatchObject(wildcard);
+  });
+
+  it('keeps preferences a project already set on the wildcard group', () => {
+    const config: any = { sitemap: [], groups: [{ userAgent: ['*'], disallow: [''], contentSignal: ['ai-train=no'] }] };
+    mergeDerivedRobots(config, { ...derived(), wildcard });
+    expect(config.groups[0].contentSignal).toEqual(['ai-train=no']);
+    expect(config.groups[0].contentUsage).toEqual(['search=y, ai-output=y']);
+  });
+
+  it('adds nothing when the project cleared the defaults', () => {
+    const config = upstreamOnly();
+    mergeDerivedRobots(config, { ...derived(), wildcard: { contentSignal: [], contentUsage: [] } });
+    expect(config.groups[0].contentSignal).toBeUndefined();
+  });
 });

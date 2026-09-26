@@ -7,7 +7,8 @@
 [![Nuxt][nuxt-src]][nuxt-href]
 
 SEO essentials for [Laioutr](https://laioutr.com) frontends: a per-host `sitemap_index.xml`, its
-child sitemaps, `robots.txt`, and the Open Graph tags a page's `<head>` needs to share well.
+child sitemaps, `robots.txt`, `llms.txt`, Markdown twins of every page, and the Open Graph tags a
+page's `<head>` needs to share well.
 
 - [✨ &nbsp;Release Notes](/CHANGELOG.md)
 
@@ -24,6 +25,22 @@ Three routes:
   the requesting host actually serves.
 - **`/__sitemap__/<name>.xml`** — the child sitemaps themselves.
 - **`/robots.txt`** — per-host, with its `Sitemap:` line resolved against the requesting host.
+
+Plus, for AI agents and other Markdown-preferring clients:
+
+- **Markdown twins** — `<path>.md` for every page (`/index.md` for the home page), converted from the
+  rendered HTML with [mdream](https://github.com/harlan-zw/mdream). Header and footer sections and
+  anything marked `data-markdown-ignore` are left out; schema.org JSON-LD is appended under
+  `## Structured Data`. Clients that prefer Markdown (`Accept: text/markdown`, known AI agents) are
+  redirected there with a `307`. A noindex page's twin carries the same directive as `X-Robots-Tag`,
+  and every twin on a deployment or market that isn't indexable (see below) carries
+  `X-Robots-Tag: noindex, nofollow` outright, since frontend-core renders no robots meta there for
+  this module to copy.
+- **`/llms.txt`** — per host: site name and description, authored notes and sections, the configured
+  pages, and one line per dynamic page type (URL pattern, count once its sitemap is complete).
+  Deliberately curated rather than a list of every URL — the sitemap already is that.
+- **Discovery** — `<link rel="alternate" type="text/markdown">` and `rel="describedby"` → `/llms.txt`
+  in the page head and the `Link` header.
 
 Plus Open Graph tags on every page — see below.
 
@@ -106,6 +123,8 @@ altogether, list it in `excludePageTypes`.
 | `extraDisallow` | `string[]` | `[]` | Appended to the wildcard (`*`) group's `Disallow` list, alongside this module's own internal `/api/` and `/_laioutr/` entries. |
 | `customGroups` | `RobotsGroup[]` | `[]` | Additional `User-agent` groups. See below. |
 | `localizeRules` | `boolean` | `true` | Repeat each rule under the language prefixes the requested host serves. See below. |
+| `contentUsage` | `string[]` or preferences object | `['search=y, ai-output=y']` | `Content-Usage:` for the wildcard (`*`) group. See "Content Signals default" below. |
+| `contentSignal` | `string[]` or preferences object | `['search=yes, ai-input=yes']` | `Content-Signal:` for the wildcard (`*`) group. Same defaults, other vocabulary. |
 
 **`robots.customGroups[]`**:
 
@@ -147,6 +166,19 @@ fails the build instead of shipping as a line no crawler acts on.
 
 [aipref-vocab]: https://ietf-wg-aipref.github.io/drafts/draft-ietf-aipref-vocab.html
 [contentsignals]: https://www.ietf.org/archive/id/draft-romm-aipref-contentsignals-00.html
+
+**Content Signals default.** The wildcard (`*`) group states a preference out of the box, so a
+project that sets nothing still answers both drafts:
+
+- `Content-Usage: search=y, ai-output=y`
+- `Content-Signal: search=yes, ai-input=yes`
+
+`train-ai` / `ai-train` is deliberately left unset: allowing or reserving training use is the site
+owner's legal decision (in the EU, a `no` acts as the Art. 4 DSM text-and-data-mining opt-out, a `yes`
+waives it), and "no preference stated" is the honest default this module can give on their behalf.
+Set `robots.contentUsage` / `robots.contentSignal` to override the wildcard group's statement, or to
+`[]` to clear it. A value already set on the `*` group through `customGroups` or raw robots config
+wins over this default.
 
 **`robots.localizeRules`.** A `Disallow` matches on the URL path, so a rule written once binds only
 where it was written: on a host serving German at the root and English under `/en`, `Disallow: /login`
@@ -200,6 +232,71 @@ without an entry — the `core/*` set, both blog listings, product listing and s
 Both sides are free-form strings, since the page type vocabulary is open-ended and so is the
 `og:type` one. There is no marker for deleting a default: to move a page type back to the generic
 type, set it to `'website'`.
+
+### `aiReady`
+
+Configure Markdown twins, content negotiation and `/llms.txt` under `aiReady`. All of it only ever
+answers `GET`/`HEAD` requests — a POST to a page URL is left alone.
+
+| Field | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `enabled` | `boolean` | `true` | |
+| `contentNegotiation` | `boolean` | `true` | Redirects a request that prefers Markdown — `Accept: text/markdown`, or a known AI agent, as decided by [`@mdream/js/negotiate`](https://github.com/harlan-zw/mdream) — from an HTML route to its `.md` twin with a `307`. A route opts out by carrying ISR, or a cache route rule whose `varies` doesn't cover `Accept, Sec-Fetch-Dest, User-Agent`: a cached response can't vary by what asked for it, so it's served without negotiating. |
+| `describedby` | `boolean` | `true` | Advertises `/llms.txt` as `rel="describedby"`, in the page head and in the `Link` header on both the HTML page and its twin. |
+| `mdreamOptions` | `Partial<MdreamOptions>` | see below | [mdream](https://github.com/harlan-zw/mdream) conversion options, merged over this module's own defaults with `defu` (arrays concatenate) — add a selector without restating ours. |
+| `markdownCacheHeaders` | `{ maxAge: number, swr: boolean } \| false` | `{ maxAge: 3600, swr: true }` | `Cache-Control` for a `.md` twin. Only a `200` twin is cached this way — a page that 404s gets no `Cache-Control` from here, so a briefly-missing page doesn't stay 404 on the CDN for `maxAge`. |
+| `llmsTxtCacheSeconds` | `number` | `600` | How long `/llms.txt` is cached, keyed by host so one market's file never serves another's. |
+| `llmsTxt.markdownLinks` | `boolean` | `true` | Link `## Pages` entries to their `.md` twin rather than the HTML page. Upstream's own default is `false`. |
+| `llmsTxt.notes` | `string \| string[]` | `[]` | Freeform preamble, rendered under **Notes:** ahead of the generated sections. |
+| `llmsTxt.sections` | `LlmsTxtSection[]` | `[]` | Authored sections — see below. |
+| `llmsTxt.pageTypes` | `Record<string, { title?, description? } \| false>` | `{}` | Title/description per dynamic page type in `## Page Types`, keyed by the page type token; `false` leaves that type out entirely. **This module's own addition — not part of nuxt-ai-ready's `aiReady`.** |
+
+Default `mdreamOptions`:
+
+```ts
+{
+  minimal: true,
+  clean: true,
+  filter: {
+    exclude: [
+      '[data-lfc-location="header"]',
+      '[data-lfc-location="footer"]',
+      '[data-markdown-ignore]',
+    ],
+  },
+  isolateMain: false,
+}
+```
+
+`frontend-core` renders no `<main>`; every section root carries `data-lfc-location` instead, which
+the default filter uses to leave header and footer sections out of the Markdown. `isolateMain: false`
+turns off mdream's own guess at a "main content" region — left at its `minimal` preset's default, it
+drops any content before a page's first heading, hero and intro copy included, which this module has
+no more insight into than mdream does.
+
+**`llmsTxt.sections[]`**:
+
+| Field | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `title` | `string` | — | |
+| `description` | `string \| string[]` | _unset_ | |
+| `optional` | `boolean` | `false` | Renders under `## Optional` instead of getting its own heading. |
+| `links` | `{ title: string, href: string, description?: string }[]` | `[]` | |
+
+Option names mirror [nuxt-ai-ready](https://nuxtseo.com/docs/ai-ready)'s `aiReady`, so this block can
+be handed to that module unchanged once frontends run Nuxt 4. `llmsTxt.pageTypes` is this module's
+own addition.
+
+On a deployment or market that isn't indexable — a non-production `environment`, or a market that
+hasn't launched — `/llms.txt` keeps its header and authored sections but leaves `## Pages` and
+`## Page Types` out, the same rule the sitemap follows.
+
+**Leaving content out of the Markdown.** Put `data-markdown-ignore` on any element:
+
+    <div class="stock-badge" data-markdown-ignore>Only 3 left!</div>
+
+A section or block definition can leave itself out entirely with `rendering: { markdown: false }`
+(needs `@laioutr-core/frontend-core` with Markdown opt-out support).
 
 ### Example
 
@@ -311,6 +408,27 @@ rather than this module's own sources, reach for their hooks instead:
 - **`site-config:init`** (`nuxt-site-config`) — called once per request as the per-host site config
   (name, url, indexable, ...) is resolved; the place to override site config in ways this module's
   own options don't expose.
+
+This module also fires the three hooks [nuxt-ai-ready](https://nuxtseo.com/docs/ai-ready) fires
+around Markdown conversion, with the same names and payloads, so a listener written against them
+keeps working unchanged once a Nuxt 4 migration replaces this module's implementation with the
+upstream one:
+
+- **`ai-ready:markdown:source`** — called before a `.md` twin is rendered; set `ctx.source` to supply
+  the page's Markdown directly and skip the render.
+- **`ai-ready:mdreamConfig`** — called with the resolved mdream options right before conversion;
+  mutate them in place.
+- **`ai-ready:page:markdown`** — called with a page's converted Markdown; reassign `ctx.markdown` to
+  adjust it.
+
+```ts
+// server/plugins/markdown.ts
+export default defineNitroPlugin((nitro) => {
+  nitro.hooks.hook('ai-ready:page:markdown', (ctx) => {
+    ctx.markdown += `\n\nSource: ${ctx.route}`;
+  });
+});
+```
 
 ## Operational notes
 

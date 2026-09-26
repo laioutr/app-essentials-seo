@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { $fetch, setup } from '@nuxt/test-utils/e2e';
+import { $fetch, fetch, setup } from '@nuxt/test-utils/e2e';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 describe('non-production deployments', async () => {
@@ -29,5 +29,25 @@ describe('non-production deployments', async () => {
   it('drops the sitemap reference so nothing is submitted', () => {
     expect(txt).toContain('User-agent: *'); // guard: a blank or error body would also "not contain" Sitemap:
     expect(txt).not.toContain('Sitemap:');
+  });
+
+  it('states no content preferences while indexing is disabled', () => {
+    expect(txt).toContain('User-agent: *'); // guard, as above
+    expect(txt).not.toContain('Content-Signal');
+  });
+
+  it('lists no pages in llms.txt', async () => {
+    const llms = await onHost('/llms.txt', 'shop.ch');
+    expect(llms.startsWith('# Switzerland\n')).toBe(true); // guard: a blank or error body would also lack pages
+    expect(llms).not.toContain('## Pages');
+    expect(llms).not.toContain('## Page Types');
+  });
+
+  it('marks the Markdown twin noindex, since frontend-core renders no robots meta here for this module to copy', async () => {
+    const response = await fetch('/md-fixture/page.md', {
+      headers: { host: 'shop.ch', 'x-forwarded-host': 'shop.ch', 'x-forwarded-proto': 'https' },
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow');
   });
 });

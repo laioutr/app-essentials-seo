@@ -1,4 +1,4 @@
-import { addPlugin, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
+import { addPlugin, addServerHandler, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
 import { defu } from 'defu';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
 import { MODULE_NAME, resolveOptions } from './types';
@@ -13,6 +13,7 @@ export type { ModuleOptions } from './types';
 // which covers a handler written in place but not one lifted out into its own named function.
 export type { SitemapUrl } from './runtime/server/lib/alternates';
 export type { SitemapSourceBuiltContext } from './runtime/types/sitemapSource';
+export type { MarkdownSource, MarkdownSourceContext, PageMarkdownContext } from './runtime/types/markdown';
 
 export default defineNuxtModule<ModuleOptions>({
   meta: { name: MODULE_NAME, version, configKey: MODULE_NAME },
@@ -40,13 +41,15 @@ export default defineNuxtModule<ModuleOptions>({
       openGraph: options.openGraph,
       siteNameByHost: derived.siteNameByHost,
       siteName: options.siteName,
+      // Read by the server-only head plugin, which runs in the app context and so sees only public config.
+      aiReady: { enabled: options.aiReady.enabled, describedby: options.aiReady.describedby },
     });
 
     applyUpstreamConfig(nuxt.options as any, derived, rawOptions as any);
 
     // See mergeDerivedRobots for why our sitemap, disallow and group entries have to land here and
     // not only through the nuxt.options.robots write above.
-    nuxt.hook('robots:config', (config) => mergeDerivedRobots(config, derived.robots));
+    nuxt.hook('robots:config', (config) => mergeDerivedRobots(config, { ...derived.robots, wildcard: derived.robotsWildcard }));
 
     await registerLaioutrApp({
       name: MODULE_NAME,
@@ -57,10 +60,17 @@ export default defineNuxtModule<ModuleOptions>({
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
     addServerPlugin(resolve('./runtime/server/nitro/robots'));
 
+    if (options.aiReady.enabled) {
+      addServerPlugin(resolve('./runtime/server/nitro/structuredData'));
+      addServerPlugin(resolve('./runtime/server/nitro/llmsTxt'));
+    }
+
     // Registers the `frontend-core:page-head:resolve` filter that adds the Open Graph tags
     // frontend-core does not emit itself. The plugin reads `openGraph.enabled` and returns early
     // when it is off, so the toggle lives in one place rather than being split across both.
     addPlugin(resolve('./runtime/app/plugins/pageHead'));
+
+    if (options.aiReady.enabled) addPlugin({ src: resolve('./runtime/app/plugins/markdownAlternate.server'), mode: 'server' });
 
     // Installed on the prepare step alone, so `#laioutr/*` and the orchestr server imports this
     // module's runtime resolves against exist when types are generated.
@@ -81,5 +91,13 @@ export default defineNuxtModule<ModuleOptions>({
     // project can always install it directly — the robots:config hook above covers both.
     await installModule('@nuxtjs/sitemap');
     await installModule('@nuxtjs/robots');
+
+    // Registered only now: both installs above call nuxt-site-config's own installer early in their
+    // setup, which registers ITS global middleware (the per-request init that getSiteIndexable and
+    // friends read). Adding ours any earlier would run it before that init, leaving site config
+    // empty for every request this middleware sees.
+    if (options.aiReady.enabled) {
+      addServerHandler({ middleware: true, handler: resolve('./runtime/server/middleware/markdown') });
+    }
   },
 });
