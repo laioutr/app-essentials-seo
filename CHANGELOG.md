@@ -1,6 +1,54 @@
 # Changelog
 
 
+## v1.4.0
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.3.0...v1.4.0)
+
+### 🚀 Enhancements
+
+- State default Content-Signal and Content-Usage for the wildcard group ([68356d0](https://github.com/laioutr/app-essentials-seo/commit/68356d0))
+- Add aiReady options mirroring nuxt-ai-ready ([82ed98b](https://github.com/laioutr/app-essentials-seo/commit/82ed98b))
+- Decide between HTML and Markdown per request ([8f55ca5](https://github.com/laioutr/app-essentials-seo/commit/8f55ca5))
+- Add Markdown response helpers for metadata, JSON-LD, frontmatter and Link ([021a4d0](https://github.com/laioutr/app-essentials-seo/commit/021a4d0))
+- Convert page HTML to Markdown with mdream ([186982b](https://github.com/laioutr/app-essentials-seo/commit/186982b))
+- Serve Markdown twins of every page with Accept negotiation ([6767337](https://github.com/laioutr/app-essentials-seo/commit/6767337))
+- Advertise the Markdown twin and llms.txt in the page head ([190b48a](https://github.com/laioutr/app-essentials-seo/commit/190b48a))
+- Render llms.txt from a model in nuxt-ai-ready's layout ([5e14cf3](https://github.com/laioutr/app-essentials-seo/commit/5e14cf3))
+- Build the llms.txt model from configured pages and page types ([04b47f0](https://github.com/laioutr/app-essentials-seo/commit/04b47f0))
+- Serve a curated per-host llms.txt ([7a02d93](https://github.com/laioutr/app-essentials-seo/commit/7a02d93))
+
+### 🩹 Fixes
+
+- Only treat a script as JSON-LD when its own type says so ([a338ff5](https://github.com/laioutr/app-essentials-seo/commit/a338ff5))
+- Copy mdream options without cloning callback values ([0a6ed7b](https://github.com/laioutr/app-essentials-seo/commit/0a6ed7b))
+- Keep content before the first heading and leave Markdown 404s uncached ([63ac944](https://github.com/laioutr/app-essentials-seo/commit/63ac944))
+- Keep negotiated redirects on this origin and stop 406ing custom routes ([e0d54e4](https://github.com/laioutr/app-essentials-seo/commit/e0d54e4))
+- Noindex Markdown twins on non-indexable deployments, drop leaked cookies ([aeef8bd](https://github.com/laioutr/app-essentials-seo/commit/aeef8bd))
+- Load mdream lazily so its native binding doesn't gate every route ([8d8e83d](https://github.com/laioutr/app-essentials-seo/commit/8d8e83d))
+- Mount llms.txt from a Nitro plugin so it stays out of the app's route types ([a9be99e](https://github.com/laioutr/app-essentials-seo/commit/a9be99e))
+
+### 💅 Refactors
+
+- Expose the domains a host serves and the domain serving a path ([746556c](https://github.com/laioutr/app-essentials-seo/commit/746556c))
+
+### 📖 Documentation
+
+- Document Markdown twins, llms.txt and content preferences ([f07c61c](https://github.com/laioutr/app-essentials-seo/commit/f07c61c))
+- Note noindex on non-indexable Markdown twins ([3cc0746](https://github.com/laioutr/app-essentials-seo/commit/3cc0746))
+
+### 🏡 Chore
+
+- Pin the core packages this module requires for development ([c1b99ee](https://github.com/laioutr/app-essentials-seo/commit/c1b99ee))
+
+### ✅ Tests
+
+- Cover the cached llms.txt path ([11c9df5](https://github.com/laioutr/app-essentials-seo/commit/11c9df5))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.3.0
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.2.0...v1.3.0)
