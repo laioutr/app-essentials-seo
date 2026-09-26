@@ -32,7 +32,10 @@ Plus, for AI agents and other Markdown-preferring clients:
   rendered HTML with [mdream](https://github.com/harlan-zw/mdream). Header and footer sections and
   anything marked `data-markdown-ignore` are left out; schema.org JSON-LD is appended under
   `## Structured Data`. Clients that prefer Markdown (`Accept: text/markdown`, known AI agents) are
-  redirected there with a `307`. A noindex page's twin carries the same directive as `X-Robots-Tag`.
+  redirected there with a `307`. A noindex page's twin carries the same directive as `X-Robots-Tag`,
+  and every twin on a deployment or market that isn't indexable (see below) carries
+  `X-Robots-Tag: noindex, nofollow` outright, since frontend-core renders no robots meta there for
+  this module to copy.
 - **`/llms.txt`** — per host: site name and description, authored notes and sections, the configured
   pages, and one line per dynamic page type (URL pattern, count once its sitemap is complete).
   Deliberately curated rather than a list of every URL — the sitemap already is that.
