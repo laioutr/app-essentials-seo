@@ -40,6 +40,8 @@ export default defineNuxtModule<ModuleOptions>({
       openGraph: options.openGraph,
       siteNameByHost: derived.siteNameByHost,
       siteName: options.siteName,
+      // Read by the server-only head plugin, which runs in the app context and so sees only public config.
+      aiReady: { enabled: options.aiReady.enabled, describedby: options.aiReady.describedby },
     });
 
     applyUpstreamConfig(nuxt.options as any, derived, rawOptions as any);
