@@ -114,4 +114,13 @@ describe('markdown twins', async () => {
   it('is reachable through $fetch too (sanity check for the fixture)', async () => {
     expect(await $fetch<string>('/md-fixture/page', { headers: hostHeaders })).toContain('Red Shoe');
   });
+
+  describe('page head', () => {
+    it('names the twin and llms.txt', async () => {
+      const html = await $fetch<string>('/', { headers: hostHeaders });
+      const links = html.match(/<link\b[^>]*>/g) ?? [];
+      expect(links.some((tag) => tag.includes('type="text/markdown"') && tag.includes('href="/index.md"'))).toBe(true);
+      expect(links.some((tag) => tag.includes('rel="describedby"') && tag.includes('href="/llms.txt"'))).toBe(true);
+    });
+  });
 });

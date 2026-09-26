@@ -70,6 +70,8 @@ export default defineNuxtModule<ModuleOptions>({
     // when it is off, so the toggle lives in one place rather than being split across both.
     addPlugin(resolve('./runtime/app/plugins/pageHead'));
 
+    if (options.aiReady.enabled) addPlugin({ src: resolve('./runtime/app/plugins/markdownAlternate.server'), mode: 'server' });
+
     // Installed on the prepare step alone, so `#laioutr/*` and the orchestr server imports this
     // module's runtime resolves against exist when types are generated.
     //
