@@ -1,7 +1,7 @@
 import { defu } from 'defu';
-import { htmlToMarkdown, type MdreamOptions } from 'mdream';
 import type { PageMarkdownContext } from '../../types/markdown';
 import type { H3Event } from 'h3';
+import type { MdreamOptions } from 'mdream';
 
 /**
  * frontend-core renders no `<main>`, so mdream's main-content heuristics would be guessing. Every
@@ -67,6 +67,11 @@ export const convertHtmlToMarkdown = async (input: {
     },
   };
   await input.hooks.mdreamConfig(options);
+
+  // Lazy: mdream pulls in a native binding, and loading it only when a twin is actually requested
+  // means a platform without that binding fails just Markdown twins, not every route this
+  // middleware sees.
+  const { htmlToMarkdown } = await import('mdream');
 
   const context: PageMarkdownContext = {
     html: input.html,
