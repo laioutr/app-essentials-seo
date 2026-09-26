@@ -55,6 +55,7 @@ describe('markdown twins', async () => {
         const response = await get(path);
         expect(response.status).toBe(404);
         expect(await response.text()).toContain('# Page not found');
+        expect(response.headers.get('cache-control')).not.toBe('public, max-age=3600, stale-while-revalidate=3600');
       }
     });
 
@@ -67,6 +68,16 @@ describe('markdown twins', async () => {
     it('renders the Nuxt home page', async () => {
       const md = await (await get('/index.md')).text();
       expect(md).toContain('seo fixture');
+    });
+  });
+
+  describe('ai-ready:markdown:source', () => {
+    it('serves a listener-supplied Markdown source with no HTML route behind it', async () => {
+      const response = await get('/md-fixture/sourced.md');
+      expect(response.status).toBe(200);
+      const md = await response.text();
+      expect(md).toContain('# From source');
+      expect(md).toMatch(/title: "?Sourced"?/);
     });
   });
 

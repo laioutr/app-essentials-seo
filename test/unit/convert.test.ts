@@ -81,6 +81,25 @@ describe('convertHtmlToMarkdown', () => {
     ]);
   });
 
+  it('keeps body content that comes before the first heading', async () => {
+    const heroHtml = `<html><head><title>Landing</title></head><body><div id="__nuxt">
+<div data-lfc-location="body"><p>Welcome text</p></div>
+<div data-lfc-location="body"><h2>Later</h2><p>After</p></div>
+</div></body></html>`;
+    const { markdown } = await convertHtmlToMarkdown({
+      html: heroHtml,
+      url: 'https://shop.ch/',
+      route: '/',
+      event: {} as never,
+      mdreamOptions: resolveMdreamOptions({}),
+      additionalFrontmatter: {},
+      hooks: { mdreamConfig: vi.fn(async () => {}), pageMarkdown: vi.fn(async () => {}) },
+    });
+    expect(markdown).toContain('Welcome text');
+    expect(markdown).toContain('## Later');
+    expect(markdown).toContain('After');
+  });
+
   it('accepts a function-valued extraction option without throwing', async () => {
     const extracted: unknown[] = [];
     const { markdown } = await convertHtmlToMarkdown({

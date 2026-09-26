@@ -13,6 +13,10 @@ export const DEFAULT_MDREAM_OPTIONS: Partial<MdreamOptions> = {
   filter: {
     exclude: ['[data-lfc-location="header"]', '[data-lfc-location="footer"]', '[data-markdown-ignore]'],
   },
+  // `minimal` turns this on by default, and its heuristic guesses at a "main content" region the
+  // same way the comment above already distrusts — dropping any body content before the first
+  // heading (hero or intro copy) instead of the header/footer this module actually knows about.
+  isolateMain: false,
 };
 
 /** `defu` concatenates arrays, so a project's selectors add to ours rather than replace them. */

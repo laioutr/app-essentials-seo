@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
       return undefined;
     case 'render':
       return renderMarkdownPage(event, decision.path, aiReady, resolveUrl);
-    // no default
+    default:
+      return undefined;
   }
-  return undefined;
 });

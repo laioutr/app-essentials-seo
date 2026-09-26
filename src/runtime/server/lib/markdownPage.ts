@@ -51,7 +51,9 @@ export const renderMarkdownPage = async (
     setResponseStatus(event, status);
     setResponseHeader(event, 'content-type', 'text/markdown; charset=utf-8');
     setResponseHeader(event, 'link', buildLinkHeader({ path, variant: 'markdown', describedby: aiReady.describedby, resolveUrl }));
-    if (aiReady.markdownCacheHeaders) {
+    // Only a 200 twin is a stable representation of the page worth caching; a 404 twin would
+    // otherwise cache a real page's outage or a typo'd URL for the same duration as content.
+    if (status === 200 && aiReady.markdownCacheHeaders) {
       const { maxAge, swr } = aiReady.markdownCacheHeaders;
       setResponseHeader(event, 'cache-control', swr ? `public, max-age=${maxAge}, stale-while-revalidate=${maxAge}` : `public, max-age=${maxAge}`);
     }
