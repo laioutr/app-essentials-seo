@@ -1,4 +1,4 @@
-import { addPlugin, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
+import { addPlugin, addServerHandler, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
 import { defu } from 'defu';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
 import { MODULE_NAME, resolveOptions } from './types';
@@ -13,6 +13,7 @@ export type { ModuleOptions } from './types';
 // which covers a handler written in place but not one lifted out into its own named function.
 export type { SitemapUrl } from './runtime/server/lib/alternates';
 export type { SitemapSourceBuiltContext } from './runtime/types/sitemapSource';
+export type { MarkdownSource, MarkdownSourceContext, PageMarkdownContext } from './runtime/types/markdown';
 
 export default defineNuxtModule<ModuleOptions>({
   meta: { name: MODULE_NAME, version, configKey: MODULE_NAME },
@@ -58,6 +59,11 @@ export default defineNuxtModule<ModuleOptions>({
 
     addServerPlugin(resolve('./runtime/server/nitro/sitemap'));
     addServerPlugin(resolve('./runtime/server/nitro/robots'));
+
+    if (options.aiReady.enabled) {
+      addServerHandler({ middleware: true, handler: resolve('./runtime/server/middleware/markdown') });
+      addServerPlugin(resolve('./runtime/server/nitro/structuredData'));
+    }
 
     // Registers the `frontend-core:page-head:resolve` filter that adds the Open Graph tags
     // frontend-core does not emit itself. The plugin reads `openGraph.enabled` and returns early
