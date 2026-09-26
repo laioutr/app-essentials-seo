@@ -1,12 +1,12 @@
+import type { LlmsTxtModel } from './format';
 import type { ResolvedOptions } from '../../../../types';
 import type { RcPage, RenderI18nConfig } from '@laioutr-core/core-types/rc';
 import { toMarkdownPath } from '../../../shared/markdownPath';
-import { composePath, unlocalize } from '../../../shared/path';
 import { defaultVariant, isDynamicPath, isPageIncluded } from '../../../shared/pageSelection';
+import { composePath, unlocalize } from '../../../shared/path';
 import { buildSitemapName } from '../../../shared/sitemapName';
 import { belongsInSitemap, resolveHostDomains } from '../hostContext';
 import { type Snapshot, snapshotState } from '../snapshotStore';
-import type { LlmsTxtModel } from './format';
 
 const PARAM = /:(\w+)(?:\([^)]*\))?[+*?]?/g;
 

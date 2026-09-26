@@ -35,4 +35,11 @@ describe('non-production deployments', async () => {
     expect(txt).toContain('User-agent: *'); // guard, as above
     expect(txt).not.toContain('Content-Signal');
   });
+
+  it('lists no pages in llms.txt', async () => {
+    const llms = await onHost('/llms.txt', 'shop.ch');
+    expect(llms.startsWith('# Switzerland\n')).toBe(true); // guard: a blank or error body would also lack pages
+    expect(llms).not.toContain('## Pages');
+    expect(llms).not.toContain('## Page Types');
+  });
 });

@@ -63,6 +63,7 @@ export default defineNuxtModule<ModuleOptions>({
     if (options.aiReady.enabled) {
       addServerHandler({ middleware: true, handler: resolve('./runtime/server/middleware/markdown') });
       addServerPlugin(resolve('./runtime/server/nitro/structuredData'));
+      addServerHandler({ route: '/llms.txt', handler: resolve('./runtime/server/routes/llmsTxt') });
     }
 
     // Registers the `frontend-core:page-head:resolve` filter that adds the Open Graph tags

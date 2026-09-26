@@ -64,7 +64,10 @@ const linkHref = (value: string) =>
     return encodeURIComponent(character);
   });
 
-const asList = (value: string | string[] | undefined) => (Array.isArray(value) ? value : value ? [value] : []);
+const asList = (value: string | string[] | undefined): string[] => {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
+};
 const descriptions = (value: string | string[] | undefined) => asList(value).filter((entry) => entry.trim()).map(inline);
 const preambleBlocks = (value: string | string[] | undefined) =>
   asList(value)

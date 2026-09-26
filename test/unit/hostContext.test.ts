@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { belongsInSitemap, resolveHostContext, resolveHostDomains, domainForPath } from '../../src/runtime/server/lib/hostContext';
+import { belongsInSitemap, domainForPath, resolveHostContext, resolveHostDomains } from '../../src/runtime/server/lib/hostContext';
 
 const de = { id: 'lng_de', code: 'de', localeChain: ['de'] };
 const fr = { id: 'lng_fr', code: 'fr', localeChain: ['fr'] };
