@@ -53,4 +53,48 @@ describe('convertHtmlToMarkdown', () => {
     const exclude = (resolveMdreamOptions({ filter: { exclude: ['.promo'] } }).filter as { exclude: string[] }).exclude;
     expect(exclude).toEqual(['.promo', '[data-lfc-location="header"]', '[data-lfc-location="footer"]', '[data-markdown-ignore]']);
   });
+
+  it('keeps one call\'s option mutations from leaking into the next call or the shared options object', async () => {
+    const options = resolveMdreamOptions({});
+    const first = await convertHtmlToMarkdown({
+      html,
+      url: 'https://shop.ch/p/red-shoe',
+      route: '/p/red-shoe',
+      event: {} as never,
+      mdreamOptions: options,
+      additionalFrontmatter: {},
+      hooks: {
+        mdreamConfig: vi.fn(async (opts: any) => {
+          opts.filter.exclude.push('h1');
+        }),
+        pageMarkdown: vi.fn(async () => {}),
+      },
+    });
+    const second = await run();
+
+    expect(first.markdown).not.toContain('# Red Shoe');
+    expect(second.markdown).toContain('# Red Shoe');
+    expect((options.filter as { exclude: string[] }).exclude).toEqual([
+      '[data-lfc-location="header"]',
+      '[data-lfc-location="footer"]',
+      '[data-markdown-ignore]',
+    ]);
+  });
+
+  it('accepts a function-valued extraction option without throwing', async () => {
+    const extracted: unknown[] = [];
+    const { markdown } = await convertHtmlToMarkdown({
+      html,
+      url: 'https://shop.ch/p/red-shoe',
+      route: '/p/red-shoe',
+      event: {} as never,
+      mdreamOptions: resolveMdreamOptions({ extraction: { h1: (element: unknown) => extracted.push(element) } } as never),
+      additionalFrontmatter: {},
+      hooks: { mdreamConfig: vi.fn(async () => {}), pageMarkdown: vi.fn(async () => {}) },
+    });
+
+    expect(markdown).toContain('# Red Shoe');
+    expect(extracted).toHaveLength(1);
+    expect(extracted[0]).toMatchObject({ tagName: 'h1', textContent: 'Red Shoe' });
+  });
 });

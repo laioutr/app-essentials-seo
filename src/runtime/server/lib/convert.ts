@@ -23,6 +23,21 @@ export const resolveMdreamOptions = (project: Record<string, unknown>): Partial<
 // (rather than the raw byte) keeps the source unambiguous instead of relying on invisible width.
 const NBSP = /\u00A0/g;
 
+/**
+ * Deep-copies mdream options so a hook's mutation (e.g. pushing a selector onto `filter.exclude`)
+ * never leaks into the next request or into the shared `DEFAULT_MDREAM_OPTIONS` these came from.
+ * `structuredClone` would do that, but it throws on a function value, and mdream's `extraction`
+ * option is callback-valued. So this rebuilds plain objects/arrays by hand and passes functions
+ * (and any other non-cloneable value) through by reference instead.
+ */
+const cloneMdreamOptions = <T>(value: T): T => {
+  if (typeof value !== 'object' || value === null) return value;
+  if (Array.isArray(value)) return value.map(cloneMdreamOptions) as unknown as T;
+  const clone: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(value)) clone[key] = cloneMdreamOptions(nested);
+  return clone as T;
+};
+
 export const convertHtmlToMarkdown = async (input: {
   html: string;
   url: string;
@@ -36,10 +51,9 @@ export const convertHtmlToMarkdown = async (input: {
   };
 }): Promise<{ markdown: string; title: string; description: string }> => {
   const meta = { title: '', description: '' };
-  // Cloned so a hook that mutates options never leaks into the next request's defaults.
   const options: Partial<MdreamOptions> = {
     origin: new URL(input.url).origin,
-    ...structuredClone(input.mdreamOptions),
+    ...cloneMdreamOptions(input.mdreamOptions),
     frontmatter: {
       additionalFields: input.additionalFrontmatter,
       onExtract: (frontmatter) => {
