@@ -195,6 +195,36 @@ export const RobotsOptionsSchema = z.object({
   contentSignal: contentPreferenceSchema(ContentSignalPreferencesSchema, CONTENT_SIGNAL_VALUES, ['search=yes, ai-input=yes']),
 });
 
+const PostalAddressSchema = z.object({
+  streetAddress: z.string(),
+  postalCode: z.string(),
+  addressLocality: z.string(),
+  addressRegion: z.string().optional(),
+  addressCountry: z.string(),
+});
+
+const OrganizationSchema = z.object({
+  /** nuxt-schema-org derives the node's resolver from this name, so only types it resolves are allowed. */
+  type: z.enum(['Organization', 'LocalBusiness']).default('Organization'),
+  /** Leave unset to name the organization after each host's own site name. */
+  name: z.string().optional(),
+  legalName: z.string().optional(),
+  /** A path or an absolute URL. */
+  logo: z.string().optional(),
+  sameAs: z.array(z.string()).default([]),
+  email: z.string().optional(),
+  telephone: z.string().optional(),
+  address: PostalAddressSchema.optional(),
+  vatID: z.string().optional(),
+});
+
+export const StructuredDataOptionsSchema = z.object({
+  /** Off installs no schema.org module at all. */
+  enabled: z.boolean().default(true),
+  /** Without it there is no Organization node; WebSite and WebPage are still emitted. */
+  organization: OrganizationSchema.optional(),
+});
+
 export const ModuleOptionsSchema = z.object({
   siteName: z.string().optional(),
   indexable: z.enum(['auto', 'always', 'never']).default('auto'),
@@ -203,6 +233,7 @@ export const ModuleOptionsSchema = z.object({
   robots: RobotsOptionsSchema.prefault({}),
   openGraph: OpenGraphOptionsSchema.prefault({}),
   aiReady: AiReadyOptionsSchema.prefault({}),
+  structuredData: StructuredDataOptionsSchema.prefault({}),
 });
 
 export type ModuleOptions = z.input<typeof ModuleOptionsSchema>;
