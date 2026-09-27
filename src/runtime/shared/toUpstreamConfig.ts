@@ -150,7 +150,10 @@ export const toUpstreamConfig = (input: {
     trailingSlash: laioutrrc.config?.trailingSlash ?? false,
     multiTenancy,
   };
-  if (options.siteName) site.name = options.siteName;
+  // A host that matches no multiTenancy entry — a preview or alias host — would otherwise fall back
+  // to the package name, which then names the schema.org identity.
+  const baseName = options.siteName ?? markets[0]?.name;
+  if (baseName) site.name = baseName;
   // 'auto' leaves it unset so getSiteIndexable falls back to env === 'production'.
   if (options.indexable !== 'auto') site.indexable = options.indexable === 'always';
 

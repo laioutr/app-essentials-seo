@@ -184,6 +184,16 @@ describe('toUpstreamConfig — siteNameByHost', () => {
   });
 });
 
+describe('toUpstreamConfig — base site name', () => {
+  it('names a host without a market entry after the first market, not after the package', () => {
+    expect(build().site.name).toBe('Switzerland');
+  });
+
+  it('uses the explicit site name when the project set one', () => {
+    expect(build({ siteName: 'Karls Shop' }).site.name).toBe('Karls Shop');
+  });
+});
+
 describe('toUpstreamConfig — sources', () => {
   it('emits one configured-pages source per locale', () => {
     const names = build()
