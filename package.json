@@ -43,6 +43,7 @@
     "@nuxtjs/sitemap": "^7.6.0",
     "defu": "^6.1.7",
     "mdream": "^1.7.2",
+    "nuxt-schema-org": "5.0.5",
     "yaml": "^2.9.1",
     "zod": "3.25.61"
   },

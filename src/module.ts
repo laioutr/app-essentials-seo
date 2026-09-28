@@ -1,5 +1,6 @@
 import { addPlugin, addServerHandler, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
 import { defu } from 'defu';
+import { toSchemaOrgConfig } from './runtime/shared/toSchemaOrgConfig';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
 import { MODULE_NAME, resolveOptions } from './types';
 import { applyUpstreamConfig, mergeDerivedRobots } from './upstreamConfig';
@@ -91,6 +92,14 @@ export default defineNuxtModule<ModuleOptions>({
     // project can always install it directly — the robots:config hook above covers both.
     await installModule('@nuxtjs/sitemap');
     await installModule('@nuxtjs/robots');
+
+    // After sitemap and robots: nuxt-schema-org names and addresses the identity from nuxt-site-config,
+    // which those two install with the per-host config derived above.
+    if (options.structuredData.enabled) {
+      const nuxtOptions = nuxt.options as any;
+      nuxtOptions.schemaOrg = defu(nuxtOptions.schemaOrg, toSchemaOrgConfig(options.structuredData));
+      await installModule('nuxt-schema-org');
+    }
 
     // Registered only now: both installs above call nuxt-site-config's own installer early in their
     // setup, which registers ITS global middleware (the per-request init that getSiteIndexable and
