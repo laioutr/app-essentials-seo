@@ -1,6 +1,34 @@
 # Changelog
 
 
+## v1.5.0
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.4.1...v1.5.0)
+
+### 🚀 Enhancements
+
+- Configure the schema.org identity under structuredData ([1440b86](https://github.com/laioutr/app-essentials-seo/commit/1440b86))
+- Emit a schema.org graph with a per-host identity through nuxt-schema-org ([8400acf](https://github.com/laioutr/app-essentials-seo/commit/8400acf))
+- Require @laioutr-core/frontend-core 0.62.0 ([4070f45](https://github.com/laioutr/app-essentials-seo/commit/4070f45))
+
+### 🩹 Fixes
+
+- Name hosts without a market entry after the first market ([b538082](https://github.com/laioutr/app-essentials-seo/commit/b538082))
+- Stop a production build when nuxt-schema-org brings a newer unhead than the project ([f492644](https://github.com/laioutr/app-essentials-seo/commit/f492644))
+
+### 📖 Documentation
+
+- Describe the structured data and the organization config ([65c238a](https://github.com/laioutr/app-essentials-seo/commit/65c238a))
+- Plan the structured data ([242636f](https://github.com/laioutr/app-essentials-seo/commit/242636f))
+
+### ✅ Tests
+
+- Prove that a second source of schema.org nodes joins the same graph ([0904ed8](https://github.com/laioutr/app-essentials-seo/commit/0904ed8))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.4.1
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.4.0...v1.4.1)

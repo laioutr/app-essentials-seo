@@ -1,6 +1,6 @@
 {
   "name": "@laioutr/app-essentials-seo",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "SEO essentials for Laioutr frontends — sitemap.xml, robots.txt, llms.txt and Markdown twins",
   "repository": "laioutr/app-essentials-seo",
   "license": "MIT",
