@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.6.0
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.5.0...v1.6.0)
+
+### 🚀 Enhancements
+
+- Per-market site name and schema.org organization ([a8008d9](https://github.com/laioutr/app-essentials-seo/commit/a8008d9))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.5.0
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.4.1...v1.5.0)
