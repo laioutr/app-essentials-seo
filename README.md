@@ -64,6 +64,62 @@ placeholder and applied the locale chain, so a dynamic page shares the entity's 
 Existing values are never overwritten: a tag another app or the project itself already set survives.
 `og:image` and Twitter cards are not emitted yet.
 
+### Structured data
+
+Every page gets a schema.org `@graph` with a `WebSite` and a `WebPage` node, via
+[`nuxt-schema-org`](https://nuxtseo.com/docs/schema-org). Both are named and addressed per host:
+each host uses its market's name (or `siteName`) and its own URL.
+
+Configure the organization behind the site under `structuredData.organization`:
+
+```json
+{
+  "structuredData": {
+    "organization": {
+      "legalName": "Example GmbH",
+      "logo": "/logo.png",
+      "email": "info@example.com",
+      "telephone": "+49 30 0000000",
+      "address": {
+        "streetAddress": "Musterstraße 1",
+        "postalCode": "10115",
+        "addressLocality": "Berlin",
+        "addressCountry": "DE"
+      },
+      "sameAs": ["https://social.example/example"],
+      "vatID": "DE000000000"
+    }
+  }
+}
+```
+
+| Field | Notes |
+| --- | --- |
+| `type` | `Organization` (default) or `LocalBusiness`. |
+| `name` | Leave it out to use each host's own site name. |
+| `logo` | A path or an absolute URL. Google asks for at least 112×112 pixels. |
+| everything else | Passed through as schema.org properties of the same name. |
+
+Without `organization`, the graph has no `Organization` node. `structuredData.enabled: false` removes
+the graph entirely.
+
+Sections that emit their own structured data — the breadcrumbs, and an accordion set to FAQ in
+`@laioutr-app/ui` — add their nodes to the same graph (with `@laioutr-core/frontend-core` 0.62.0 or
+later).
+
+Only the server-rendered HTML carries the graph; it is not updated on client-side navigation.
+
+**One unhead version.** `nuxt-schema-org` brings `@unhead/schema-org` 2.1, which needs the project's
+`@unhead/vue` and `unhead` on 2.1 too. A project still locked to unhead 2.0 ends up with two `unhead`
+copies, and every server-rendered page then fails. Align them once after installing:
+
+```bash
+pnpm update --depth Infinity @unhead/vue @unhead/schema-org unhead
+```
+
+`pnpm-lock.yaml` should then list a single `unhead@` version. `@laioutr-core/frontend-core` 0.62.0 or
+later stops a production build with this command when the versions differ.
+
 ### Child sitemap naming
 
 You will see these names in the index and in logs, so it helps to know how they're built:
