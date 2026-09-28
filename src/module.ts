@@ -1,8 +1,10 @@
-import { addPlugin, addServerHandler, addServerPlugin, createResolver, defineNuxtModule, installModule } from '@nuxt/kit';
+import { fileURLToPath } from 'node:url';
+import { addPlugin, addServerHandler, addServerPlugin, createResolver, defineNuxtModule, installModule, useLogger } from '@nuxt/kit';
 import { defu } from 'defu';
 import { toSchemaOrgConfig } from './runtime/shared/toSchemaOrgConfig';
 import { toUpstreamConfig } from './runtime/shared/toUpstreamConfig';
 import { MODULE_NAME, resolveOptions } from './types';
+import { checkUnheadVersions } from './unheadVersions';
 import { applyUpstreamConfig, mergeDerivedRobots } from './upstreamConfig';
 import { registerLaioutrApp } from '@laioutr-core/kit';
 import type { ModuleOptions } from './types';
@@ -96,6 +98,19 @@ export default defineNuxtModule<ModuleOptions>({
     // After sitemap and robots: nuxt-schema-org names and addresses the identity from nuxt-site-config,
     // which those two install with the per-host config derived above.
     if (options.structuredData.enabled) {
+      const logger = useLogger(MODULE_NAME);
+      let unhead: ReturnType<typeof checkUnheadVersions> = { level: 'ok' };
+      try {
+        unhead = checkUnheadVersions(nuxt.options.rootDir, fileURLToPath(import.meta.url));
+      } catch (error) {
+        logger.warn('Could not compare the installed unhead versions:', error);
+      }
+      if (unhead.message) {
+        // Only a production build fails: prepare and dev run constantly, and dev renders fine regardless.
+        if (unhead.level === 'error' && !nuxt.options.dev && !nuxt.options._prepare) throw new Error(`[${MODULE_NAME}] ${unhead.message}`);
+        logger.warn(unhead.message);
+      }
+
       const nuxtOptions = nuxt.options as any;
       nuxtOptions.schemaOrg = defu(nuxtOptions.schemaOrg, toSchemaOrgConfig(options.structuredData));
       await installModule('nuxt-schema-org');

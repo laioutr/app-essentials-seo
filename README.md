@@ -117,8 +117,8 @@ copies, and every server-rendered page then fails. Align them once after install
 pnpm update --depth Infinity @unhead/vue @unhead/schema-org unhead
 ```
 
-`pnpm-lock.yaml` should then list a single `unhead@` version. `@laioutr-core/frontend-core` 0.62.0 or
-later stops a production build with this command when the versions differ.
+`pnpm-lock.yaml` should then list a single `unhead@` version. When nuxt-schema-org's unhead is newer
+than the project's, this module stops a production build with that command; an older one only warns.
 
 ### Child sitemap naming
 
