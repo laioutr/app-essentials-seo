@@ -100,6 +100,8 @@ Configure the organization behind the site under `structuredData.organization`:
 | `logo` | A path or an absolute URL. Google asks for at least 112×112 pixels. |
 | everything else | Passed through as schema.org properties of the same name. |
 
+Fields that differ per shop — the e-mail, the logo — go under [`markets`](#markets).
+
 Without `organization`, the graph has no `Organization` node. `structuredData.enabled: false` removes
 the graph entirely.
 
@@ -143,9 +145,39 @@ app config key, since Cockpit only permits app configuration under the package n
 
 | Field | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `siteName` | `string` | _unset_ | Site name used for every market. When unset, each market falls back to its own name. |
+| `siteName` | `string` | _unset_ | Site name used for every market. When unset, each market falls back to its own name. `markets.<id>.siteName` overrides it for one market. |
+| `markets` | `Record<marketId, …>` | `{}` | Per-market settings — see below. |
 | `indexable` | `'auto' \| 'always' \| 'never'` | `'auto'` | `'auto'` leaves indexability unset, so it falls back to `environment === 'production'`. `'always'`/`'never'` force it regardless of environment. |
 | `environment` | `'production' \| 'staging' \| 'preview' \| 'development'` | _unset_ | Falls back, in order, to the `NUXT_SITE_ENV`, `NUXT_PUBLIC_SITE_ENV`, then `VERCEL_ENV` environment variables, and finally `'production'` if none are set. |
+
+### `markets`
+
+Settings that differ between the shops of one project, keyed by market id. The id stays the same
+when a market is renamed. Each entry overrides the project-wide value on that market's hosts:
+
+```json
+{
+  "siteName": "Example",
+  "structuredData": {
+    "organization": { "legalName": "Example GmbH", "telephone": "+49 30 0000000" }
+  },
+  "markets": {
+    "<market id>": {
+      "siteName": "Example NL",
+      "structuredData": {
+        "organization": { "email": "info@example.nl", "logo": "/logos/example-nl.png" }
+      }
+    }
+  }
+}
+```
+
+| Field | Notes |
+| --- | --- |
+| `siteName` | The site name on this market's hosts: `og:site_name` and the schema.org `WebSite` and `Organization` names. |
+| `structuredData.organization` | Only the fields that differ. They replace the project organization's fields; `address` and `sameAs` are replaced whole. A market can also have an organization when the project has none. |
+
+A market id that matches no market of the project is ignored, with a build warning.
 
 ### `sitemap`
 

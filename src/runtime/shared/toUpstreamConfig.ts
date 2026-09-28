@@ -1,6 +1,7 @@
 import { MODULE_NAME } from './moduleName';
 import { isDynamicPath } from './pageSelection';
 import { buildSitemapName, CONFIGURED_PAGES_TOKEN } from './sitemapName';
+import { toIdentity } from './toSchemaOrgConfig';
 import type { ResolvedOptions } from '../../types';
 import type { RcMarket, RcMarketDomain, RcProject } from '@laioutr-core/core-types/rc';
 
@@ -41,7 +42,9 @@ export interface SitemapSourceDescriptor {
 export interface DerivedSiteConfig {
   env: string;
   trailingSlash: boolean;
-  multiTenancy: Array<{ hosts: string[]; config: { name: string; defaultLocale?: string } }>;
+  multiTenancy: Array<{ hosts: string[]; config: { name: string; defaultLocale?: string; identity?: Record<string, unknown> } }>;
+  /** The schema.org organization for a host that matches no market. */
+  identity?: Record<string, unknown>;
   /** Only set when the project named the site; otherwise each market's own name is used. */
   name?: string;
   /** Left unset on 'auto' so the environment decides. */
@@ -84,6 +87,23 @@ export const toUpstreamConfig = (input: {
   const markets = Object.values(laioutrrc.markets ?? {});
   const pages = Object.values(laioutrrc.pages ?? {});
   const localeOf = (languageId: string) => languages.find((language) => language.id === languageId)?.code;
+
+  for (const marketId of Object.keys(options.markets)) {
+    if (!markets.some((market) => market.id === marketId)) {
+      console.warn(`[${MODULE_NAME}] markets.${marketId} matches no market of this project; its settings are ignored.`);
+    }
+  }
+
+  // Per host, not in nuxt-schema-org's module options: nuxt-schema-org reads the identity from the
+  // host's own site config, so each market can describe its own shop.
+  const identityFor = (market: ResolvedOptions['markets'][string] | undefined) => {
+    if (!options.structuredData.enabled) return undefined;
+    const project = options.structuredData.organization;
+    const override = market?.structuredData?.organization;
+    if (!project && !override) return undefined;
+    const overridden = Object.fromEntries(Object.entries(override ?? {}).filter(([, value]) => value !== undefined));
+    return toIdentity({ type: 'Organization' as const, sameAs: [], ...project, ...overridden });
+  };
 
   const locales = [...new Set(languages.map((language) => language.code))];
 
@@ -129,11 +149,14 @@ export const toUpstreamConfig = (input: {
       entries.find(({ domain, market }) => domain.id === market.defaultDomainId) ??
       entries.find(({ domain }) => domain.path === undefined) ??
       entries[0];
+    const marketOptions = options.markets[primary.market.id];
+    const identity = identityFor(marketOptions);
     return {
       hosts: [host, toDevHost(host)],
       config: {
-        name: options.siteName ?? primary.market.name,
+        name: marketOptions?.siteName ?? options.siteName ?? primary.market.name,
         defaultLocale: localeOf(primary.domain.languageId),
+        ...(identity && { identity }),
       },
     };
   });
@@ -154,6 +177,8 @@ export const toUpstreamConfig = (input: {
   // to the package name, which then names the schema.org identity.
   const baseName = options.siteName ?? markets[0]?.name;
   if (baseName) site.name = baseName;
+  const baseIdentity = identityFor(undefined);
+  if (baseIdentity) site.identity = baseIdentity;
   // 'auto' leaves it unset so getSiteIndexable falls back to env === 'production'.
   if (options.indexable !== 'auto') site.indexable = options.indexable === 'always';
 

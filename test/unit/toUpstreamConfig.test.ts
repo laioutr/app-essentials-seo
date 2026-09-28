@@ -194,6 +194,60 @@ describe('toUpstreamConfig — base site name', () => {
   });
 });
 
+describe('toUpstreamConfig — per-market settings', () => {
+  const hostConfig = (config: ReturnType<typeof build>, host: string) =>
+    config.site.multiTenancy.find((entry) => entry.hosts.includes(host))!.config;
+
+  it("names a market's hosts after its own siteName, ahead of the project siteName", () => {
+    const config = build({ siteName: 'Shop', markets: { mkt_de: { siteName: 'Germany Shop' } } });
+    expect(hostConfig(config, 'shop.de').name).toBe('Germany Shop');
+    expect(hostConfig(config, 'shop.ch').name).toBe('Shop');
+    expect(config.siteNameByHost['shop.de']).toBe('Germany Shop');
+  });
+
+  it("gives every host the project organization as its identity, with the market's fields on top", () => {
+    const config = build({
+      structuredData: { organization: { legalName: 'Shop AG', email: 'info@shop.ch', sameAs: ['https://social.example/shop'] } },
+      markets: { mkt_de: { structuredData: { organization: { email: 'info@shop.de', logo: '/logo-de.png' } } } },
+    });
+    expect(hostConfig(config, 'shop.ch').identity).toEqual({
+      type: 'Organization',
+      legalName: 'Shop AG',
+      email: 'info@shop.ch',
+      sameAs: ['https://social.example/shop'],
+    });
+    expect(hostConfig(config, 'shop.de').identity).toEqual({
+      type: 'Organization',
+      legalName: 'Shop AG',
+      email: 'info@shop.de',
+      logo: '/logo-de.png',
+      sameAs: ['https://social.example/shop'],
+    });
+    expect(config.site.identity).toEqual(hostConfig(config, 'shop.ch').identity);
+  });
+
+  it('gives a market an organization of its own when the project has none', () => {
+    const config = build({ markets: { mkt_de: { structuredData: { organization: { legalName: 'Shop GmbH' } } } } });
+    expect(hostConfig(config, 'shop.de').identity).toEqual({ type: 'Organization', legalName: 'Shop GmbH' });
+    expect(hostConfig(config, 'shop.ch').identity).toBeUndefined();
+    expect(config.site.identity).toBeUndefined();
+  });
+
+  it('sets no identity when structured data is switched off', () => {
+    const config = build({ structuredData: { enabled: false, organization: { legalName: 'Shop AG' } } });
+    expect(hostConfig(config, 'shop.ch').identity).toBeUndefined();
+    expect(config.site.identity).toBeUndefined();
+  });
+
+  it('warns about a market id the project does not have and ignores it', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const config = build({ siteName: 'Shop', markets: { mkt_gone: { siteName: 'Gone' } } });
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('mkt_gone'));
+    expect(Object.values(config.siteNameByHost)).not.toContain('Gone');
+    warn.mockRestore();
+  });
+});
+
 describe('toUpstreamConfig — sources', () => {
   it('emits one configured-pages source per locale', () => {
     const names = build()

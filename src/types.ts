@@ -225,6 +225,17 @@ export const StructuredDataOptionsSchema = z.object({
   organization: OrganizationSchema.optional(),
 });
 
+/** One market's settings. Each one set replaces the project-wide value on that market's hosts. */
+const MarketOptionsSchema = z.object({
+  siteName: z.string().optional(),
+  structuredData: z
+    .object({
+      /** Only the fields that differ; unset fields keep the project organization's. */
+      organization: OrganizationSchema.partial().optional(),
+    })
+    .optional(),
+});
+
 export const ModuleOptionsSchema = z.object({
   siteName: z.string().optional(),
   indexable: z.enum(['auto', 'always', 'never']).default('auto'),
@@ -234,6 +245,8 @@ export const ModuleOptionsSchema = z.object({
   openGraph: OpenGraphOptionsSchema.prefault({}),
   aiReady: AiReadyOptionsSchema.prefault({}),
   structuredData: StructuredDataOptionsSchema.prefault({}),
+  /** Keyed by market id, which survives a market rename. */
+  markets: z.record(z.string(), MarketOptionsSchema).default({}),
 });
 
 export type ModuleOptions = z.input<typeof ModuleOptionsSchema>;

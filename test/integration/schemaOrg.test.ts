@@ -10,6 +10,7 @@ describe('schema.org graph', async () => {
     nuxtConfig: {
       '@laioutr/app-essentials-seo': {
         structuredData: { organization: { legalName: 'Fixture GmbH', telephone: '+41 00 000 00 00' } },
+        markets: { mkt_de: { structuredData: { organization: { email: 'info@shop.de' } } } },
       },
     } as never,
   });
@@ -48,6 +49,14 @@ describe('schema.org graph', async () => {
     const de = nodeOf((await graphOf('shop.de')).graph, 'Organization');
     expect(ch).toMatchObject({ name: 'Switzerland', url: expect.stringMatching(/^https:\/\/shop\.ch\/?$/) });
     expect(de).toMatchObject({ name: 'Germany', url: expect.stringMatching(/^https:\/\/shop\.de\/?$/) });
+  });
+
+  it("describes each market's organization with its own fields on top of the project's", async () => {
+    const ch = nodeOf((await graphOf('shop.ch')).graph, 'Organization');
+    const de = nodeOf((await graphOf('shop.de')).graph, 'Organization');
+    expect(ch).toMatchObject({ legalName: 'Fixture GmbH' });
+    expect(ch).not.toHaveProperty('email');
+    expect(de).toMatchObject({ legalName: 'Fixture GmbH', telephone: '+41 00 000 00 00', email: 'info@shop.de' });
   });
 
   it('names the website per host', async () => {

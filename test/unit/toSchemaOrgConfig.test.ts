@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { toSchemaOrgConfig } from '../../src/runtime/shared/toSchemaOrgConfig';
+import { toIdentity, toSchemaOrgConfig } from '../../src/runtime/shared/toSchemaOrgConfig';
 import { resolveOptions } from '../../src/types';
 
 const build = (structuredData?: object) => toSchemaOrgConfig(resolveOptions({ structuredData }).structuredData);
+const identityOf = (organization: object) => toIdentity(resolveOptions({ structuredData: { organization } }).structuredData.organization!);
 
 describe('toSchemaOrgConfig', () => {
-  it('keeps the WebSite and WebPage defaults and adds no identity without an organization', () => {
+  it('keeps the WebSite and WebPage defaults', () => {
     expect(build()).toEqual({ enabled: true, defaults: true });
   });
 
@@ -13,8 +14,15 @@ describe('toSchemaOrgConfig', () => {
     expect(build({ enabled: false }).enabled).toBe(false);
   });
 
+  // A module-level identity would win over the per-host one in each host's site config.
+  it('sets no module-level identity, even with an organization', () => {
+    expect(build({ organization: { legalName: 'Acme GmbH' } })).not.toHaveProperty('identity');
+  });
+});
+
+describe('toIdentity', () => {
   it('leaves name and url out when they are not configured, so each host keeps its own', () => {
-    const identity = build({ organization: { telephone: '+49 30 0000000' } }).identity;
+    const identity = identityOf({ telephone: '+49 30 0000000' });
     expect(identity).toEqual({ type: 'Organization', telephone: '+49 30 0000000' });
     expect(identity).not.toHaveProperty('name');
     expect(identity).not.toHaveProperty('url');
@@ -23,19 +31,17 @@ describe('toSchemaOrgConfig', () => {
   it('passes every configured field', () => {
     const address = { streetAddress: 'Musterstraße 1', postalCode: '10115', addressLocality: 'Berlin', addressCountry: 'DE' };
     expect(
-      build({
-        organization: {
-          type: 'LocalBusiness',
-          name: 'Acme',
-          legalName: 'Acme GmbH',
-          logo: '/logo.png',
-          sameAs: ['https://social.example/acme'],
-          email: 'info@example.com',
-          telephone: '+49 30 0000000',
-          address,
-          vatID: 'DE000000000',
-        },
-      }).identity
+      identityOf({
+        type: 'LocalBusiness',
+        name: 'Acme',
+        legalName: 'Acme GmbH',
+        logo: '/logo.png',
+        sameAs: ['https://social.example/acme'],
+        email: 'info@example.com',
+        telephone: '+49 30 0000000',
+        address,
+        vatID: 'DE000000000',
+      })
     ).toEqual({
       type: 'LocalBusiness',
       name: 'Acme',
@@ -50,6 +56,6 @@ describe('toSchemaOrgConfig', () => {
   });
 
   it('drops an empty sameAs list', () => {
-    expect(build({ organization: { legalName: 'Acme GmbH' } }).identity).not.toHaveProperty('sameAs');
+    expect(identityOf({ legalName: 'Acme GmbH' })).not.toHaveProperty('sameAs');
   });
 });
