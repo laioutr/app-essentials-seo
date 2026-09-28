@@ -36,6 +36,13 @@ describe('schema.org graph', async () => {
     expect(nodeOf(graph, 'Organization')).toMatchObject({ legalName: 'Fixture GmbH', telephone: '+41 00 000 00 00' });
   });
 
+  it("merges another source's nodes into the same graph", async () => {
+    const { count, graph } = await graphOf('shop.ch', '/?node=1');
+    expect(count).toBe(1);
+    expect(nodeOf(graph, 'Question')).toMatchObject({ name: 'Fixture question?' });
+    expect(nodeOf(graph, 'WebPage')).toBeDefined();
+  });
+
   it('names and addresses the organization per host', async () => {
     const ch = nodeOf((await graphOf('shop.ch')).graph, 'Organization');
     const de = nodeOf((await graphOf('shop.de')).graph, 'Organization');
