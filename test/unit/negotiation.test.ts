@@ -1,4 +1,6 @@
+import { validateHeaderValue } from 'node:http';
 import { describe, expect, it } from 'vitest';
+import { buildLinkHeader } from '../../src/runtime/server/lib/linkHeader';
 import {
   contentNegotiationFor,
   decideNegotiation,
@@ -43,6 +45,36 @@ describe('decideNegotiation', () => {
     expect(decide('//evil.com/x', { accept: 'text/markdown' })).toEqual({ kind: 'redirect', path: '/evil.com/x' });
     expect(decide('/\\evil.com/x', { accept: 'text/markdown' })).toEqual({ kind: 'redirect', path: '/evil.com/x' });
     expect(decide('//evil.com/x.md')).toEqual({ kind: 'render', path: '/evil.com/x' });
+  });
+
+  // h3 hands over event.path decoded from 1.15.8 on, and every path decided here ends up in a header.
+  it('escapes a decoded path again, so a character above U+00FF cannot reach a header', () => {
+    expect(decide('/prawo-do-odstąpienia-od-umowy', { 'sec-fetch-dest': 'document' })).toEqual({
+      kind: 'html',
+      path: '/prawo-do-odst%C4%85pienia-od-umowy',
+      negotiated: true,
+    });
+    expect(decide('/brand®-shoe.md')).toEqual({ kind: 'render', path: '/brand%C2%AE-shoe' });
+    expect(decide('/a b<c>"d', { accept: 'text/markdown' })).toEqual({ kind: 'redirect', path: '/a%20b%3Cc%3E%22d' });
+  });
+
+  it('leaves a path the client already escaped as it is', () => {
+    expect(decide('/prawo-do-odst%C4%85pienia-od-umowy', { 'sec-fetch-dest': 'document' })).toEqual({
+      kind: 'html',
+      path: '/prawo-do-odst%C4%85pienia-od-umowy',
+      negotiated: true,
+    });
+    expect(decide("/a%2Fb/c.d/e-f_g~h!$&'()*+,;=:@i", { 'sec-fetch-dest': 'document' })).toEqual({
+      kind: 'html',
+      path: "/a%2Fb/c.d/e-f_g~h!$&'()*+,;=:@i",
+      negotiated: true,
+    });
+  });
+
+  it('gives the page a Link header Node accepts when its path was decoded', () => {
+    const decision = decide('/prawo-do-odstąpienia-od-umowy', { 'sec-fetch-dest': 'document' }) as { path: string };
+    const link = buildLinkHeader({ path: decision.path, variant: 'html', describedby: true, resolveUrl: (path) => `https://shop.test${path}` });
+    expect(() => validateHeaderValue('link', link)).not.toThrow();
   });
 
   it('never negotiates when negotiation is off, but still marks the page', () => {

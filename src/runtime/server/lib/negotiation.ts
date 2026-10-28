@@ -34,10 +34,17 @@ const negotiateRepresentation = (headers: Record<string, string | undefined>) =>
   return negotiateContent(accept, secFetchDest);
 };
 
-// event.path is raw, so a client can send `//evil.com/x` or `/\evil.com/x`; normalising the leading
+// event.path is the client's, so a client can send `//evil.com/x` or `/\evil.com/x`; normalising the leading
 // run to a single `/` (the same rule h3's getRequestURL applies) keeps every decision on this origin,
 // so a negotiated redirect can never send a client to an attacker-controlled host.
 const LEADING_SLASHES = /^[/\\]+/;
+
+// What a URL path may carry as it is (RFC 3986's pchar and `/`), plus `%`, which starts an escape. h3 hands
+// over event.path decoded from 1.15.8 on, and every decided path ends up in a header or a URL, where Node
+// refuses a character above U+00FF outright. Escaping the rest again gives the path the request carried, and
+// leaves one that is still escaped as it is.
+const NOT_IN_PATH = /[^\w\-.~!$&'()*+,;=:@/%]/gu;
+const escapePath = (path: string) => path.replace(NOT_IN_PATH, (character) => encodeURIComponent(character));
 
 export const decideNegotiation = (request: {
   path: string;
@@ -46,7 +53,7 @@ export const decideNegotiation = (request: {
 }): NegotiationDecision => {
   const normalizedPath = request.path.replace(LEADING_SLASHES, '/');
   const queryIndex = normalizedPath.indexOf('?');
-  const path = queryIndex === -1 ? normalizedPath : normalizedPath.slice(0, queryIndex);
+  const path = escapePath(queryIndex === -1 ? normalizedPath : normalizedPath.slice(0, queryIndex));
   if (path.startsWith('/.well-known/')) return SKIP;
   if (request.headers[INTERNAL_HEADER]) return SKIP;
 
