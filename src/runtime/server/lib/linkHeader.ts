@@ -2,7 +2,7 @@ import { toMarkdownPath } from '../../shared/markdownPath';
 
 /**
  * The HTML page names its Markdown twin; the twin names its HTML page as canonical, since a Markdown
- * response has no `<head>` to say so. Paths arrive already percent-encoded from the request, so they
+ * response has no `<head>` to say so. Paths arrive percent-encoded from `decideNegotiation`, so they
  * are not encoded again.
  */
 export const buildLinkHeader = (input: {
