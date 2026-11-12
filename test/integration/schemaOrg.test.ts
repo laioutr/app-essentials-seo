@@ -9,7 +9,10 @@ describe('schema.org graph', async () => {
     rootDir: fileURLToPath(new URL('../fixtures/seo', import.meta.url)),
     nuxtConfig: {
       '@laioutr/app-essentials-seo': {
-        structuredData: { organization: { legalName: 'Fixture GmbH', telephone: '+41 00 000 00 00' } },
+        structuredData: {
+          autoWebSite: true,
+          organization: { legalName: 'Fixture GmbH', telephone: '+41 00 000 00 00' },
+        },
         markets: { mkt_de: { structuredData: { organization: { email: 'info@shop.de' } } } },
       },
     } as never,
