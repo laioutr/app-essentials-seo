@@ -221,7 +221,15 @@ const OrganizationSchema = z.object({
 export const StructuredDataOptionsSchema = z.object({
   /** Off installs no schema.org module at all. */
   enabled: z.boolean().default(true),
-  /** Without it there is no Organization node; WebSite and WebPage are still emitted. */
+  /**
+   * Emit nuxt-schema-org's generic `WebSite` and `WebPage` default nodes (and the identity node
+   * derived from each host's site config). Off by default: for a single-host multilingual setup the
+   * generic `WebSite` builds a `workTranslation` list that resolves to its own URL — a self-reference
+   * — and a site that emits its own WebSite/WebPage via `useSchemaOrg` ends up with competing nodes.
+   * Turn on when the generic defaults are the sole source of structured data for the site.
+   */
+  autoWebSite: z.boolean().default(false),
+  /** Without it there is no Organization node. */
   organization: OrganizationSchema.optional(),
 });
 

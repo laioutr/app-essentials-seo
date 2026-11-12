@@ -9,7 +9,7 @@ type Organization = NonNullable<StructuredData['organization']>;
  */
 export const toSchemaOrgConfig = (structuredData: StructuredData) => ({
   enabled: structuredData.enabled,
-  defaults: true as const,
+  defaults: structuredData.autoWebSite,
 });
 
 // nuxt-schema-org spreads the identity over the host's own name and URL, so an explicit

@@ -66,9 +66,24 @@ Existing values are never overwritten: a tag another app or the project itself a
 
 ### Structured data
 
-Every page gets a schema.org `@graph` with a `WebSite` and a `WebPage` node, via
-[`nuxt-schema-org`](https://nuxtseo.com/docs/schema-org). Both are named and addressed per host:
-each host uses its market's name (or `siteName`) and its own URL.
+The module installs [`nuxt-schema-org`](https://nuxtseo.com/docs/schema-org) so every page can carry
+a schema.org `@graph`. The module itself emits no nodes: sections or project plugins call
+`useSchemaOrg` and compose the graph.
+
+To have `nuxt-schema-org` seed a generic `WebSite` and `WebPage` node per page (named and addressed
+per host), turn on `structuredData.autoWebSite`:
+
+```json
+{
+  "structuredData": {
+    "autoWebSite": true
+  }
+}
+```
+
+Leave it off when the project emits its own `WebSite` / `WebPage` — otherwise the generic defaults
+run alongside the project's nodes, and for a single-host multilingual setup the generic `WebSite`
+builds a `workTranslation` list that resolves to its own URL (self-reference).
 
 Configure the organization behind the site under `structuredData.organization`:
 
@@ -102,8 +117,12 @@ Configure the organization behind the site under `structuredData.organization`:
 
 Fields that differ per shop — the e-mail, the logo — go under [`markets`](#markets).
 
-Without `organization`, the graph has no `Organization` node. `structuredData.enabled: false` removes
-the graph entirely.
+`structuredData.organization` is read by `nuxt-schema-org` through each host's site config and only
+materializes as an `Organization` node when `autoWebSite` is on — configure one without the other
+and the fields have no effect. A project that emits its own `defineOrganization(...)` via
+`useSchemaOrg` is unaffected: those nodes ship regardless of `autoWebSite`.
+`structuredData.enabled: false` uninstalls `nuxt-schema-org` entirely and removes the graph for the
+whole project.
 
 Sections that emit their own structured data — the breadcrumbs, and an accordion set to FAQ in
 `@laioutr-app/ui` — add their nodes to the same graph (with `@laioutr-core/frontend-core` 0.62.0 or

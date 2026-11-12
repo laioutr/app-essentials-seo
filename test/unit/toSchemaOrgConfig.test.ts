@@ -6,8 +6,12 @@ const build = (structuredData?: object) => toSchemaOrgConfig(resolveOptions({ st
 const identityOf = (organization: object) => toIdentity(resolveOptions({ structuredData: { organization } }).structuredData.organization!);
 
 describe('toSchemaOrgConfig', () => {
-  it('keeps the WebSite and WebPage defaults', () => {
-    expect(build()).toEqual({ enabled: true, defaults: true });
+  it('leaves the WebSite and WebPage defaults off', () => {
+    expect(build()).toEqual({ enabled: true, defaults: false });
+  });
+
+  it('turns the WebSite and WebPage defaults on when autoWebSite is set', () => {
+    expect(build({ autoWebSite: true })).toEqual({ enabled: true, defaults: true });
   });
 
   it('passes the enabled switch through', () => {
