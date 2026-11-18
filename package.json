@@ -20,7 +20,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "laioutr.manifest.json"
   ],
   "scripts": {
     "dev": "npm run dev:prepare && nuxi dev playground",
@@ -28,7 +29,7 @@
     "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
     "lint": "eslint .",
     "prepack": "nuxt-module-build build",
-    "release": "npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags",
+    "release": "test -n \"$LAIOUTR_API_KEY\" || { echo 'Set LAIOUTR_API_KEY first: the release ends with laioutr app release, which sends the settings form to the Laioutr Cockpit.' >&2; exit 1; } && npm run lint && npm run test && npm run prepack && changelogen --release && npm publish && git push --follow-tags && laioutr app release",
     "test": "vitest run",
     "test:types": "vue-tsc --noEmit && vue-tsc -p src/runtime/server/tsconfig.json --noEmit && cd playground && vue-tsc --noEmit",
     "test:watch": "vitest watch"
@@ -53,6 +54,7 @@
     "@laioutr-core/devtools": "^0.62.0",
     "@laioutr-core/frontend-core": "^0.62.0",
     "@laioutr-core/orchestr": "^0.62.0",
+    "@laioutr/cli": "^0.6.1",
     "@laioutr/eslint-config": "^1.8.8",
     "@laioutr/prettier-config": "^1.1.0",
     "@nuxt/devtools": "^2.6.3",

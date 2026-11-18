@@ -564,12 +564,15 @@ We use ESLint and Prettier to lint and format the code. This repository contains
 
 ## Publishing
 
-To publish a new version, run `pnpm release`. This will:
+To publish a new version, set `LAIOUTR_API_KEY` to a Laioutr API key with the `app:publish` scope, created in the organization that owns this app in the Laioutr Cockpit. Then run `pnpm release`. This will:
 
 - Run the tests
 - Update the changelog
 - Publish the package to npmjs.org
 - Push the changes to the repository
+- Send the version and its settings form (`laioutr.manifest.json`) to the Laioutr Cockpit with `laioutr app release`
+
+Without `LAIOUTR_API_KEY` the release stops before it changes anything. If only the last step fails, run `pnpm exec laioutr app release` again: it records the same version again and changes nothing else.
 
 ### Private publishing
 

@@ -1,0 +1,387 @@
+{
+  "configSettings": {
+    "placement": "environment",
+    "menu": {
+      "label": "SEO",
+      "icon": "LuSearch"
+    },
+    "sections": [
+      {
+        "label": "Site",
+        "description": "How search engines see this environment.",
+        "fields": [
+          {
+            "name": "siteName",
+            "type": "text",
+            "label": "Site name",
+            "description": "og:site_name and the schema.org WebSite and Organization names on every market. Empty: each market uses its own name. A name for one market goes under Markets."
+          },
+          {
+            "name": "indexable",
+            "type": "select",
+            "label": "Indexing",
+            "default": "auto",
+            "options": [
+              { "value": "auto", "label": "Automatic — only when the environment type is production" },
+              { "value": "always", "label": "Always indexable" },
+              { "value": "never", "label": "Never indexable" }
+            ]
+          },
+          {
+            "name": "environment",
+            "type": "select",
+            "label": "Environment type",
+            "description": "What automatic indexing reads. Empty: the NUXT_SITE_ENV, NUXT_PUBLIC_SITE_ENV or VERCEL_ENV variable, else production.",
+            "options": [
+              { "value": "production", "label": "Production" },
+              { "value": "staging", "label": "Staging" },
+              { "value": "preview", "label": "Preview" },
+              { "value": "development", "label": "Development" }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "Crawlers",
+        "description": "sitemap.xml and robots.txt.",
+        "fields": [
+          {
+            "name": "sitemap",
+            "type": "object",
+            "label": "sitemap.xml",
+            "schema": [
+              {
+                "fields": [
+                  { "name": "enabled", "type": "checkbox", "label": "Serve sitemap.xml", "default": true },
+                  {
+                    "name": "includeImages",
+                    "type": "checkbox",
+                    "label": "List preview images",
+                    "description": "An image entry for each page-index entry that carries a preview image.",
+                    "default": true
+                  },
+                  {
+                    "name": "defaultChangefreq",
+                    "type": "select",
+                    "label": "Default change frequency",
+                    "description": "For a URL that sets none. Empty: no changefreq.",
+                    "options": [
+                      { "value": "always", "label": "Always" },
+                      { "value": "hourly", "label": "Hourly" },
+                      { "value": "daily", "label": "Daily" },
+                      { "value": "weekly", "label": "Weekly" },
+                      { "value": "monthly", "label": "Monthly" },
+                      { "value": "yearly", "label": "Yearly" },
+                      { "value": "never", "label": "Never" }
+                    ]
+                  },
+                  {
+                    "name": "defaultPriority",
+                    "type": "number",
+                    "label": "Default priority",
+                    "description": "From 0 to 1, for a URL that sets none. Empty: no priority.",
+                    "min": 0,
+                    "max": 1
+                  }
+                ]
+              },
+              {
+                "label": "Page types",
+                "fields": [
+                  {
+                    "name": "excludePageTypes",
+                    "type": "json",
+                    "label": "Page types left out",
+                    "description": "A JSON list of page type tokens. Their pages get no URL and no child sitemap.",
+                    "placeholder": "[\"core/checkout\"]"
+                  },
+                  {
+                    "name": "pageTypes",
+                    "type": "json",
+                    "label": "Change frequency and priority per page type",
+                    "description": "A JSON list, one entry per page type.",
+                    "placeholder": "[{ \"pageType\": \"ecommerce/product-detail-page\", \"changefreq\": \"daily\", \"priority\": 0.8 }]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "robots",
+            "type": "object",
+            "label": "robots.txt",
+            "schema": [
+              {
+                "fields": [
+                  { "name": "enabled", "type": "checkbox", "label": "Serve robots.txt", "default": true },
+                  { "name": "blockAiBots", "type": "checkbox", "label": "Block AI crawlers", "default": false },
+                  {
+                    "name": "blockNonSeoBots",
+                    "type": "checkbox",
+                    "label": "Block crawlers that are not search engines",
+                    "default": false
+                  },
+                  {
+                    "name": "localizeRules",
+                    "type": "checkbox",
+                    "label": "Repeat each rule under the language prefixes of the host",
+                    "description": "Disallow: /login then also covers /en/login on a host that serves English under /en.",
+                    "default": true
+                  }
+                ]
+              },
+              {
+                "label": "Rules",
+                "fields": [
+                  {
+                    "name": "extraDisallow",
+                    "type": "json",
+                    "label": "More Disallow paths",
+                    "description": "A JSON list of paths, added to the * group.",
+                    "placeholder": "[\"/search\"]"
+                  },
+                  {
+                    "name": "customGroups",
+                    "type": "json",
+                    "label": "More User-agent groups",
+                    "description": "A JSON list of groups, each with userAgent, allow, disallow, contentUsage and contentSignal.",
+                    "placeholder": "[{ \"userAgent\": [\"GPTBot\"], \"disallow\": [\"/\"] }]"
+                  }
+                ]
+              },
+              {
+                "label": "AI preferences",
+                "description": "What a crawler may do with what it fetched, for the * group. Empty keeps the defaults shown, which leave AI training unstated. [] states nothing.",
+                "fields": [
+                  {
+                    "name": "contentUsage",
+                    "type": "json",
+                    "label": "Content-Usage",
+                    "description": "Categories bots, train-ai, ai-output, search. Values y, n.",
+                    "placeholder": "[\"search=y, ai-output=y\"]"
+                  },
+                  {
+                    "name": "contentSignal",
+                    "type": "json",
+                    "label": "Content-Signal",
+                    "description": "Categories search, ai-input, ai-train. Values yes, no.",
+                    "placeholder": "[\"search=yes, ai-input=yes\"]"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "Open Graph",
+        "description": "The og: tags a shared link shows.",
+        "fields": [
+          {
+            "name": "openGraph",
+            "type": "object",
+            "label": "Open Graph",
+            "schema": [
+              {
+                "fields": [
+                  { "name": "enabled", "type": "checkbox", "label": "Add Open Graph tags", "default": true },
+                  {
+                    "name": "defaultType",
+                    "type": "text",
+                    "label": "Default og:type",
+                    "description": "For every page type without its own.",
+                    "default": "website"
+                  },
+                  {
+                    "name": "pageTypes",
+                    "type": "json",
+                    "label": "og:type per page type",
+                    "description": "A JSON object keyed by page type token. It is merged over blog/post-single → article, ecommerce/product-detail-page → product and location/detail → place.",
+                    "placeholder": "{ \"blog/post-single\": \"article\" }"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "AI agents",
+        "description": "Markdown twins of every page, and /llms.txt.",
+        "fields": [
+          {
+            "name": "aiReady",
+            "type": "object",
+            "label": "Markdown and /llms.txt",
+            "schema": [
+              {
+                "fields": [
+                  { "name": "enabled", "type": "checkbox", "label": "Serve Markdown twins and /llms.txt", "default": true },
+                  {
+                    "name": "contentNegotiation",
+                    "type": "checkbox",
+                    "label": "Send a request that prefers Markdown to the twin",
+                    "description": "Accept: text/markdown, or a known AI agent, gets a 307 to the .md URL.",
+                    "default": true
+                  },
+                  {
+                    "name": "describedby",
+                    "type": "checkbox",
+                    "label": "Link /llms.txt in the page head and the Link header",
+                    "default": true
+                  },
+                  {
+                    "name": "mdreamOptions",
+                    "type": "json",
+                    "label": "Markdown conversion",
+                    "description": "mdream options as a JSON object, merged over this app's own. A list is added to, not replaced.",
+                    "placeholder": "{ \"filter\": { \"exclude\": [\".newsletter\"] } }"
+                  }
+                ]
+              },
+              {
+                "fields": [
+                  {
+                    "name": "llmsTxt",
+                    "type": "object",
+                    "label": "/llms.txt",
+                    "schema": [
+                      {
+                        "fields": [
+                          {
+                            "name": "markdownLinks",
+                            "type": "checkbox",
+                            "label": "Link pages to their Markdown twin",
+                            "default": true
+                          },
+                          {
+                            "name": "sections",
+                            "type": "json",
+                            "label": "Sections",
+                            "description": "A JSON list of sections, each with title, description, links and optional.",
+                            "placeholder": "[{ \"title\": \"Help\", \"links\": [{ \"title\": \"Shipping\", \"href\": \"/shipping\" }] }]"
+                          },
+                          {
+                            "name": "pageTypes",
+                            "type": "json",
+                            "label": "Page types",
+                            "description": "Title and description per page type token, as a JSON object. false leaves a page type out.",
+                            "placeholder": "{ \"ecommerce/product-detail-page\": { \"title\": \"Products\" }, \"blog/post-single\": false }"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "Structured data",
+        "description": "The schema.org graph of every page: WebSite, WebPage and, when set, the organization behind the site.",
+        "fields": [
+          {
+            "name": "structuredData",
+            "type": "object",
+            "label": "schema.org",
+            "schema": [
+              {
+                "fields": [
+                  { "name": "enabled", "type": "checkbox", "label": "Add structured data", "default": true },
+                  {
+                    "name": "organization",
+                    "type": "object",
+                    "label": "Organization",
+                    "description": "Empty: the graph has no Organization node. Values that differ per market go under Markets.",
+                    "schema": [
+                      {
+                        "fields": [
+                          {
+                            "name": "type",
+                            "type": "select",
+                            "label": "Type",
+                            "description": "Empty: Organization.",
+                            "options": [
+                              { "value": "Organization", "label": "Organization" },
+                              { "value": "LocalBusiness", "label": "Local business" }
+                            ]
+                          },
+                          {
+                            "name": "name",
+                            "type": "text",
+                            "label": "Name",
+                            "description": "Empty: the site name of each host."
+                          },
+                          { "name": "legalName", "type": "text", "label": "Legal name" },
+                          {
+                            "name": "logo",
+                            "type": "text",
+                            "label": "Logo",
+                            "description": "A path or an absolute URL. Google asks for at least 112 × 112 pixels.",
+                            "placeholder": "/logo.png"
+                          },
+                          { "name": "email", "type": "text", "label": "Email" },
+                          { "name": "telephone", "type": "text", "label": "Telephone" },
+                          { "name": "vatID", "type": "text", "label": "VAT ID" },
+                          {
+                            "name": "sameAs",
+                            "type": "json",
+                            "label": "Profiles elsewhere",
+                            "description": "A JSON list of URLs.",
+                            "placeholder": "[\"https://social.example/example\"]"
+                          }
+                        ]
+                      },
+                      {
+                        "fields": [
+                          {
+                            "name": "address",
+                            "type": "object",
+                            "label": "Postal address",
+                            "description": "Fill street, postal code, city and country, or none of them. An address without one of them stops the build.",
+                            "schema": [
+                              {
+                                "fields": [
+                                  { "name": "streetAddress", "type": "text", "label": "Street" },
+                                  { "name": "postalCode", "type": "text", "label": "Postal code" },
+                                  { "name": "addressLocality", "type": "text", "label": "City" },
+                                  { "name": "addressRegion", "type": "text", "label": "Region" },
+                                  {
+                                    "name": "addressCountry",
+                                    "type": "text",
+                                    "label": "Country",
+                                    "description": "A two-letter code.",
+                                    "placeholder": "DE"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "Markets",
+        "description": "Values that differ between the shops of this project.",
+        "fields": [
+          {
+            "name": "markets",
+            "type": "json",
+            "label": "Per market",
+            "description": "A JSON object keyed by market id, which stays when a market is renamed. Each value replaces the project-wide one on the market's hosts. An organization's address and sameAs are replaced whole.",
+            "placeholder": "{ \"<market id>\": { \"siteName\": \"Example NL\", \"structuredData\": { \"organization\": { \"email\": \"info@example.nl\" } } } }"
+          }
+        ]
+      }
+    ]
+  }
+}
