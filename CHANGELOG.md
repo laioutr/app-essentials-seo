@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v1.7.0
+
+[compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.6.1...v1.7.0)
+
+### 🚀 Enhancements
+
+- Declare the settings form for the Laioutr Cockpit ([6b35045](https://github.com/laioutr/app-essentials-seo/commit/6b35045))
+
+### ❤️ Contributors
+
+- Sebastian Langer <sebastian.langer@laioutr.com>
+
 ## v1.6.1
 
 [compare changes](https://github.com/laioutr/app-essentials-seo/compare/v1.6.0...v1.6.1)
